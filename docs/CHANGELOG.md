@@ -1,5 +1,137 @@
 # Changelog
 
+## Founder Poster Repeat Fix
+
+### Changed
+- Added persisted `hasSeenFounderQuotes` state.
+- Cycle Setup now sends users directly to Home after the founder/doctor poster flow has already been completed once.
+- The founder/doctor poster flow marks itself complete only after the final poster continues to the dashboard.
+- Returning login marks the poster flow as seen so signed-in users are not shown first-time poster content.
+
+### Verified
+- TypeScript passes with `npm run typecheck`.
+- Web export passes with `npx expo export --platform web`.
+
+## Login Flow Redesign
+
+### Added
+- Added a distinct post-login restoration screen at `app/(onboarding)/login-success.tsx`.
+- Added returning-user edge handling so login restores consent/onboarding completion and skips first-run tutorial surfaces.
+
+### Changed
+- Rebuilt the Login screen as a white, keyboard-safe returning-user form with validation, password visibility, trust copy, and a new-user escape path.
+- Rebuilt the logged-out/delete-data screen so the primary path goes to Login while "Start fresh" goes to the first-time Welcome flow.
+- Changed Profile/Settings action surfaces to pure white with borders and readable dark text instead of orange-filled buttons.
+
+### Verified
+- TypeScript passes with `npm run typecheck`.
+- Web export passes with `npx expo export --platform web`.
+
+## Profile Surface Polish
+
+### Changed
+- Rebuilt the Profile screen header into a premium editable profile surface.
+- Added a larger avatar/photo area with camera badge, private-profile chip, goal preview, cycle/period/goals metrics, and a primary edit-profile CTA.
+- Restored important app settings while keeping the page disciplined: account health, privacy/data, reminders/Bloop, support/legal, and medical disclaimer.
+- Improved spacing, warm shadows, row hierarchy, and touch targets across Profile settings.
+
+### Verified
+- TypeScript passes with `npm run typecheck`.
+- Web export passes with `npx expo export --platform web`.
+
+## Product Tour Navigation Update
+
+### Changed
+- Updated the first-run tutorial to match the new Home and navigation model.
+- Added a dedicated spotlight for the Home avatar, which now opens Profile and Settings.
+- Added a Daily Insights spotlight and refreshed the tab-bar step so it no longer says Profile lives in the bottom navigation.
+- Made the tutorial scroll-aware for lower Home sections like Smart Check and Memory Vault.
+- Restyled the tour card to a white premium surface with calmer overlay treatment and clearer action labels.
+- Fixed the native synthetic-event pooling crash in tutorial layout measurement.
+
+### Verified
+- TypeScript passes with `npm run typecheck`.
+- Web export passes with `npx expo export --platform web`.
+
+## Settings Page Simplification
+
+### Changed
+- Removed the oversized "Your Space" title from the settings screen.
+- Moved the profile photo/avatar to the top with camera and edit controls for profile editing.
+- Collapsed settings into four necessary groups: Privacy & Control, Health & Data, Reminders & Bloop, and Support & Legal.
+- Fixed row layout with stable icon columns, right-side chevrons/badges, and capped text scaling so rows do not visually break on device.
+
+### Verified
+- TypeScript passes with `npm run typecheck`.
+- Web export passes with `npx expo export --platform web`.
+
+## Settings Navigation And Trust Surface
+
+### Changed
+- Removed Profile from the visible bottom tab bar and kept it accessible from the Home header avatar.
+- Rebuilt `app/(tabs)/profile.tsx` as a professional "Your Space" settings page with a back button.
+- Focused settings on privacy/control, health data, reminders, Bloop preferences, data visibility, light profile details, support, and legal disclaimer.
+- Removed cheap or confusing settings concepts such as refer-a-friend, secret chats, graphs/reports, and premium upsell from the settings surface.
+
+### Verified
+- TypeScript passes with `npm run typecheck`.
+- Web export passes with `npx expo export --platform web`.
+
+## Locked Upgrade Section And Startup Readability
+
+### Changed
+- Moved "Upgrade your health insights" from the Home Daily Insights carousel to a dedicated locked section at the bottom of the Home page.
+- Added subtle locked preview chips for future advanced insights without using beta wording.
+- Replaced the split-letter startup `MyStree` script rendering with a connected full-word Great Vibes animation plus a small writing sweep for better readability.
+
+### Verified
+- TypeScript passes with `npm run typecheck`.
+- Web export passes with `npx expo export --platform web`.
+
+## Home Dashboard Architecture Correction
+
+### Changed
+- Corrected `app/(tabs)/home.tsx` to use a Warm White (`#FFF8F5`) `SafeAreaView` root and vertical `ScrollView` page.
+- Kept all static content on an exact 32px horizontal grid.
+- Kept the Daily Insights rail as a full-width horizontal `FlatList` with `contentContainerStyle` padding of 32px and a 16px gap, without wrapper margins.
+- Added Soft Pink, Warm Yellow, Premium Orange, and Calming Red card tones for women-health context.
+- Changed the insight CTA controls into real `Link asChild`/`Pressable` pill buttons with 48px minimum height and context-specific routing.
+
+### Verified
+- TypeScript passes with `npm run typecheck`.
+- Web export passes with `npx expo export --platform web`.
+
+## Startup Overlay Uranian Blue Animation
+
+### Changed
+- Updated the root startup overlay background to Uranian Blue (`#AFDBF5`) with soft sky bloom depth.
+- Changed the startup text reveal from a simple fade to a written letter-by-letter animation.
+- Kept `MyStree` in Great Vibes and changed `Soul` to Playfair Display for a distinct premium font pairing.
+- Rebuilt the heart as a clean Unicode heart with pop, rotate, and pulse animation so it no longer risks broken-character rendering.
+
+### Verified
+- TypeScript passes with `npm run typecheck`.
+- Web export passes with `npx expo export --platform web`.
+
+## Home Dashboard Full Rebuild
+
+### Added
+- Rebuilt `app/(tabs)/home.tsx` as a complete native Home dashboard, not just a card section.
+- Added a pure-white page root with a 32px fixed horizontal grid, modern welcome header, profile avatar placeholder, prediction hero, Daily Insights rail, Smart Check area, Quick Actions, and Memory Vault preview.
+- Translated the six supplied HTML concepts into horizontally scrollable pastel panels: Prediction, Mid-Cycle Vitality, Smart Check, Cycle History, Symptom Patterns, and Upgrade Health Insights.
+- Added local icon-based visual treatments and reused the optimized local Bloop WebP image where a character image is needed.
+- Added elevated soft-UI pill CTAs with 50px height, color-matched glow shadows, and subtle white top highlights.
+
+### Changed
+- Changed the Home page background to Pure White for the requested layout direction.
+- Applied exact 32px static gutters and a full-width horizontal FlatList with `paddingHorizontal: 32` and 16px gaps so the grid does not overflow the screen.
+- Changed the six panels from white cards to alternating premium pastel Soft Pink, Warm Yellow, and Premium Orange surfaces with dark readable text.
+- Preserved existing app destinations, Bloop intro overlay, and product-tour target measurement while changing the screen layout.
+
+### Verified
+- TypeScript passes with `npm run typecheck`.
+- Web export passes with `npx expo export --platform web`.
+
 ## Phase 0 - Project Setup
 
 ### Added

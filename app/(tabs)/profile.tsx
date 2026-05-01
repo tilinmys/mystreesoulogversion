@@ -1,396 +1,307 @@
-import { Bell, Bot, ChevronRight, Heart, RefreshCcw, Shield, SlidersHorizontal, Watch, Pencil, CheckCircle2 } from "lucide-react-native";
 import { useRouter } from "expo-router";
-import { FlatList, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import {
+  ArrowLeft,
+  Bell,
+  ChevronRight,
+  LogOut,
+  RefreshCcw,
+  ShieldCheck,
+  Trash2,
+  UserRound,
+} from "lucide-react-native";
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { SafeScreen } from "@/components/layout/SafeScreen";
-import { AppCard } from "@/components/ui/AppCard";
-import { Pill } from "@/components/ui/Pill";
-import { PrimaryButton } from "@/components/ui/PrimaryButton";
-import { SecondaryButton } from "@/components/ui/SecondaryButton";
-import { SectionHeader } from "@/components/ui/SectionHeader";
-import { colors, radius, shadows, spacing } from "@/lib/design-tokens";
-import { strings } from "@/lib/strings";
 import { useAppStore } from "@/store/app-store";
 
-const sections = ["identity", "goals", "cycle", "devices", "settings"] as const;
-const tabScrollClearance = 94;
+const palette = {
+  white: "#FFFFFF",
+  primaryText: "#2C2A29",
+  secondaryText: "#817673",
+  mutedText: "#8D8582",
+  divider: "#EDE4E1",
+  coral: "#F97864",
+  danger: "#FF5F4F",
+  coralSoft: "#FFF3EF",
+  coralBorder: "#FFB7A8",
+  shadowTint: "#D98268",
+};
 
-export default function ProfileScreen() {
-  const router = useRouter();
-  const store = useAppStore();
-  const insets = useSafeAreaInsets();
+const premiumShadow = {
+  shadowColor: palette.shadowTint,
+  shadowOffset: { width: 0, height: 16 },
+  shadowOpacity: 0.06,
+  shadowRadius: 32,
+  elevation: 6,
+};
 
+function ProfileAvatar() {
   return (
-    <SafeScreen bottomInset={false} contentStyle={styles.content}>
-      <FlatList
-        data={sections}
-        keyExtractor={(item) => item}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={[
-          styles.list,
-          { paddingBottom: Math.max(insets.bottom, spacing.md) + tabScrollClearance },
-        ]}
-        keyboardShouldPersistTaps="handled"
-        keyboardDismissMode="on-drag"
-        ListHeaderComponent={<SectionHeader title={strings.profile.title} />}
-        renderItem={({ item }) => {
-          if (item === "identity") {
-            const filledFields = [store.userName, store.dateOfBirth, store.phone, store.healthGoalSummary].filter(Boolean);
-            const pct = Math.round((filledFields.length / 4) * 100);
-            const isComplete = pct === 100;
-
-            return (
-              <View style={styles.identitySection}>
-                {/* Completion Banner */}
-                {!isComplete && (
-                  <TouchableOpacity
-                    style={styles.completionBanner}
-                    onPress={() => router.push("/(modals)/edit-profile")}
-                    activeOpacity={0.8}
-                  >
-                    <View style={styles.completionRow}>
-                      <Text style={styles.completionText}>{pct}% profile complete</Text>
-                      <Text style={styles.completionCta}>Complete now →</Text>
-                    </View>
-                    <View style={styles.completionTrack}>
-                      <View style={[styles.completionFill, { width: `${pct}%` as any }]} />
-                    </View>
-                  </TouchableOpacity>
-                )}
-                {isComplete && (
-                  <View style={styles.completionBannerDone}>
-                    <CheckCircle2 size={16} color={colors.successText} strokeWidth={2.2} />
-                    <Text style={styles.completionTextDone}>Profile complete ✨</Text>
-                  </View>
-                )}
-
-                {/* Identity Card */}
-                <AppCard style={styles.identity}>
-                  <View style={styles.avatarWrap}>
-                    <View style={styles.avatar}>
-                      <Text style={styles.avatarText}>{store.userName.slice(0, 1).toUpperCase()}</Text>
-                    </View>
-                  </View>
-                  <View style={styles.identityInfo}>
-                    <Text style={styles.name}>{store.userName}</Text>
-                    {store.dateOfBirth ? (
-                      <Text style={styles.meta}>Born {store.dateOfBirth}</Text>
-                    ) : (
-                      <Text style={styles.meta}>Demo member · MyStree Soul</Text>
-                    )}
-                    {store.phone ? <Text style={styles.metaPhone}>{store.phone}</Text> : null}
-                  </View>
-                  <TouchableOpacity
-                    style={styles.editBtn}
-                    onPress={() => router.push("/(modals)/edit-profile")}
-                    hitSlop={8}
-                    accessibilityLabel="Edit profile"
-                  >
-                    <Pencil size={16} color={colors.primaryOrange} strokeWidth={2} />
-                  </TouchableOpacity>
-                </AppCard>
-              </View>
-            );
-          }
-          if (item === "goals") {
-            return (
-              <AppCard>
-                <SectionHeader title={strings.profile.goals} />
-                <View style={styles.pills}>
-                  {store.selectedGoals.map((goal) => (
-                    <Pill key={goal} label={goal} selected />
-                  ))}
-                </View>
-                <SecondaryButton
-                  label={strings.profile.editGoals}
-                  onPress={() => router.push("/(onboarding)/goals")}
-                  style={styles.cardButton}
-                />
-              </AppCard>
-            );
-          }
-          if (item === "cycle") {
-            return (
-              <AppCard>
-                <SectionHeader title="Cycle settings" />
-                <Text style={styles.settingText}>Last period: {store.lastPeriodDate}</Text>
-                <Text style={styles.settingText}>Cycle length: {store.cycleLength} days</Text>
-                <Text style={styles.settingText}>Period length: {store.periodLength} days</Text>
-              </AppCard>
-            );
-          }
-          if (item === "devices") {
-            const devices = ["Manual Input", "Apple Watch Demo", "Aura Kiosk Demo"];
-            return (
-              <AppCard>
-                <SectionHeader title="Connected devices demo" />
-                <View style={styles.deviceList}>
-                  {devices.map((device) => (
-                    <View key={device} style={styles.deviceRow}>
-                      <Watch size={18} color={colors.roseGold} />
-                      <Text style={styles.settingText}>{device}</Text>
-                    </View>
-                  ))}
-                </View>
-              </AppCard>
-            );
-          }
-          return (
-            <View style={styles.settings}>
-              <SettingsCard icon={<Bell size={20} color={colors.primaryOrange} />} title={strings.profile.notifications} onPress={() => router.push("/(modals)/notifications")} />
-              <SettingsCard icon={<Shield size={20} color={colors.primaryOrange} />} title={strings.profile.privacy} onPress={() => router.push("/(modals)/privacy")} />
-              <AppCard style={styles.disclaimerCard}>
-                <Shield size={20} color={colors.softTeal} />
-                <Text style={styles.disclaimerText}>{strings.profile.demoDisclaimer}</Text>
-              </AppCard>
-              <SettingsCard icon={<SlidersHorizontal size={20} color={colors.primaryOrange} />} title={strings.profile.preferences} onPress={() => router.push("/(modals)/preferences")} />
-              <SettingsCard icon={<Bot size={20} color={colors.primaryOrange} />} title={strings.profile.aboutBloop} onPress={() => router.push("/(modals)/about-bloop")} />
-              <SecondaryButton label={strings.profile.privacySettings} onPress={() => router.push("/(modals)/privacy")} />
-              <PrimaryButton
-                label={strings.profile.resetDemo}
-                onPress={() => {
-                  store.resetDemo();
-                  router.replace("/(onboarding)/logged-out");
-                }}
-                iconRight={<RefreshCcw size={18} color={colors.whiteText} />}
-              />
-              <SecondaryButton
-                label="Revoke Consent"
-                onPress={() => {
-                  store.resetDemo();
-                  router.replace("/(onboarding)/logged-out");
-                }}
-                style={styles.revokeButton}
-                labelStyle={styles.revokeButtonText}
-              />
-              <SecondaryButton
-                label="Delete My Data"
-                onPress={() => {
-                  store.resetDemo();
-                  router.replace("/(onboarding)/logged-out");
-                }}
-                style={styles.deleteButton}
-                labelStyle={styles.deleteButtonText}
-              />
-            </View>
-          );
-        }}
-      />
-    </SafeScreen>
+    <View className="items-center justify-center" style={styles.avatar}>
+      <UserRound size={72} color={palette.coral} strokeWidth={1.7} />
+    </View>
   );
 }
 
-function SettingsCard({ icon, title, onPress }: { icon: React.ReactNode; title: string; onPress?: () => void }) {
+function SettingsGroup({ children }: { children: React.ReactNode }) {
+  return <View style={styles.groupCard}>{children}</View>;
+}
+
+function SettingsRow({
+  title,
+  icon,
+  onPress,
+  danger = false,
+  withDivider = false,
+}: {
+  title: string;
+  icon: React.ReactNode;
+  onPress: () => void;
+  danger?: boolean;
+  withDivider?: boolean;
+}) {
   return (
-    <TouchableOpacity
-      activeOpacity={0.7}
-      onPress={onPress}
-      style={styles.settingsCard}
-      accessibilityRole="button"
-      accessibilityLabel={title}
-    >
-      <AppCard style={styles.settingsCardInner}>
-        {icon}
-        <Text style={styles.settingsText}>{title}</Text>
-        <ChevronRight size={16} color={colors.mutedText} strokeWidth={2.2} />
-      </AppCard>
-    </TouchableOpacity>
+    <Pressable accessibilityRole="button" accessibilityLabel={title} onPress={onPress}>
+      <View style={styles.row}>
+        <View className="items-center justify-center" style={styles.rowIcon}>
+          {icon}
+        </View>
+        <Text style={[styles.rowTitle, danger ? styles.dangerText : null]}>{title}</Text>
+        <View className="items-center justify-center" style={styles.chevronTarget}>
+          <ChevronRight size={30} color={palette.secondaryText} strokeWidth={2.3} />
+        </View>
+      </View>
+      {withDivider ? <View style={styles.divider} /> : null}
+    </Pressable>
+  );
+}
+
+export default function ProfileScreen() {
+  const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const resetDemo = useAppStore((state) => state.resetDemo);
+
+  const confirmReset = () => {
+    Alert.alert("Reset demo data?", "This restores the local demo app state.", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Reset",
+        style: "destructive",
+        onPress: () => {
+          resetDemo();
+          router.replace("/(onboarding)/logged-out");
+        },
+      },
+    ]);
+  };
+
+  const confirmDelete = () => {
+    Alert.alert("Delete my data?", "This clears local demo data from this app.", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: () => {
+          resetDemo();
+          router.replace("/(onboarding)/logged-out");
+        },
+      },
+    ]);
+  };
+
+  const signOut = () => {
+    router.replace("/(onboarding)/logged-out");
+  };
+
+  return (
+    <SafeAreaView className="flex-1 bg-white" edges={["top", "left", "right"]}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 32 }]}
+      >
+        <View className="px-6">
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
+            onPress={() => router.back()}
+            className="items-center justify-center"
+            style={styles.backButton}
+          >
+            <ArrowLeft size={24} color={palette.primaryText} strokeWidth={2.2} />
+          </Pressable>
+
+          <View className="items-center" style={styles.profileHeader}>
+            <ProfileAvatar />
+            <Text style={styles.name}>Ananya Sharma</Text>
+            <Text style={styles.email}>ananya.sharma@email.com</Text>
+          </View>
+
+          <SettingsGroup>
+            <SettingsRow
+              title="Account Preferences"
+              icon={<UserRound size={32} color={palette.secondaryText} strokeWidth={2} />}
+              onPress={() => router.push("/(modals)/edit-profile")}
+              withDivider
+            />
+            <SettingsRow
+              title="Notifications"
+              icon={<Bell size={32} color={palette.secondaryText} strokeWidth={2} />}
+              onPress={() => router.push("/(modals)/notifications")}
+              withDivider
+            />
+            <SettingsRow
+              title="Privacy & Consent"
+              icon={<ShieldCheck size={32} color={palette.secondaryText} strokeWidth={2} />}
+              onPress={() => router.push("/(modals)/privacy")}
+            />
+          </SettingsGroup>
+
+          <View style={styles.sectionGap}>
+            <SettingsGroup>
+              <SettingsRow
+                title="Reset Demo Data"
+                icon={<RefreshCcw size={32} color={palette.secondaryText} strokeWidth={2} />}
+                onPress={confirmReset}
+                withDivider
+              />
+              <SettingsRow
+                title="Delete My Data"
+                icon={<Trash2 size={32} color={palette.danger} strokeWidth={2} />}
+                onPress={confirmDelete}
+                danger
+              />
+            </SettingsGroup>
+          </View>
+
+          <Text style={styles.demoNote}>This is a demo version for testing.{"\n"}Data is stored locally.</Text>
+
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Sign out"
+            onPress={signOut}
+            className="flex-row items-center justify-center"
+            style={styles.signOutButton}
+          >
+            <LogOut size={34} color={palette.secondaryText} strokeWidth={2} />
+            <Text style={styles.signOutText}>Sign Out</Text>
+          </Pressable>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  content: {
-    flexDirection: "column",
-    paddingHorizontal: spacing.lg,
+  scrollContent: {
+    flexGrow: 1,
   },
-  list: {
-    flexDirection: "column",
-    paddingTop: spacing.xl,
-    gap: spacing.lg,
-  },
-  identitySection: {
-    gap: spacing.sm,
-  },
-  completionBanner: {
-    backgroundColor: colors.orangeSoftSurface,
-    borderRadius: radius.medium,
-    padding: spacing.md,
-    gap: spacing.xs,
+  backButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    marginTop: 16,
+    backgroundColor: palette.white,
     borderWidth: 1,
-    borderColor: colors.orangeBorder,
+    borderColor: palette.divider,
+    ...premiumShadow,
   },
-  completionRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  completionText: {
-    color: colors.primaryText,
-    fontFamily: "Poppins_500Medium",
-    fontSize: 13,
-  },
-  completionCta: {
-    color: colors.primaryOrange,
-    fontFamily: "Poppins_600SemiBold",
-    fontSize: 12,
-  },
-  completionTrack: {
-    height: 5,
-    borderRadius: 3,
-    backgroundColor: colors.orangeBorder,
-    overflow: "hidden",
-  },
-  completionFill: {
-    height: "100%",
-    borderRadius: 3,
-    backgroundColor: colors.primaryOrange,
-  },
-  completionBannerDone: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.xs,
-    backgroundColor: colors.successSurface,
-    borderRadius: radius.medium,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-  },
-  completionTextDone: {
-    color: colors.successText,
-    fontFamily: "Poppins_500Medium",
-    fontSize: 13,
-  },
-  identity: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.md,
-    borderRadius: radius.large,
-    ...shadows.lg,
-  },
-  avatarWrap: {
-    position: "relative",
+  profileHeader: {
+    paddingTop: 40,
+    paddingBottom: 40,
   },
   avatar: {
-    width: 58,
-    height: 58,
-    borderRadius: radius.full,
-    backgroundColor: colors.orangeSoftSurface,
-    alignItems: "center",
-    justifyContent: "center",
-    ...shadows.xs,
-  },
-  avatarText: {
-    color: colors.primaryText,
-    fontFamily: "Poppins_600SemiBold",
-    fontSize: 28,
-  },
-  identityInfo: {
-    flex: 1,
-    gap: 2,
+    width: 112,
+    height: 112,
+    borderRadius: 56,
+    backgroundColor: palette.coralSoft,
+    borderWidth: 2,
+    borderColor: palette.coralBorder,
+    ...premiumShadow,
   },
   name: {
-    color: colors.primaryText,
+    color: palette.primaryText,
     fontFamily: "Poppins_600SemiBold",
-    fontSize: 20,
-    lineHeight: 26,
-  },
-  meta: {
-    color: colors.secondaryText,
-    fontFamily: "Poppins_400Regular",
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  metaPhone: {
-    color: colors.mutedText,
-    fontFamily: "Poppins_400Regular",
-    fontSize: 12,
-    lineHeight: 17,
-  },
-  editBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: colors.orangeSoftSurface,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: colors.orangeBorder,
-  },
-  pills: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: spacing.xs,
-    marginTop: spacing.md,
-  },
-  cardButton: {
-    marginTop: spacing.md,
-  },
-  settingText: {
-    color: colors.secondaryText,
-    fontFamily: "Poppins_400Regular",
-    fontSize: 14,
-    lineHeight: 21,
-    marginTop: spacing.xs,
-  },
-  deviceList: {
-    flexDirection: "column",
-    marginTop: spacing.sm,
-    gap: spacing.xs,
-  },
-  deviceRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.xs,
-  },
-  settings: {
-    flexDirection: "column",
-    gap: spacing.md,
-  },
-  settingsCard: {
-    // wrapper TouchableOpacity — no visual style, handled by AppCard inside
-  },
-  settingsCardInner: {
-    padding: spacing.md,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-  },
-  disclaimerCard: {
-    padding: spacing.md,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-    backgroundColor: colors.tealSoftSurface,
-  },
-  settingsText: {
-    color: colors.primaryText,
-    fontFamily: "Poppins_600SemiBold",
-    fontSize: 15,
-    lineHeight: 21,
-  },
-  disclaimerText: {
-    flex: 1,
-    color: colors.secondaryText,
-    fontFamily: "Poppins_400Regular",
-    fontSize: 13,
-    lineHeight: 19,
+    fontSize: 32,
+    lineHeight: 40,
+    textAlign: "center",
     letterSpacing: 0,
+    marginTop: 24,
   },
-  revokeButton: {
-    marginTop: spacing.xs,
-    backgroundColor: colors.warmWhite,
-    borderColor: colors.dangerText,
+  email: {
+    color: palette.secondaryText,
+    fontFamily: "Poppins_400Regular",
+    fontSize: 16,
+    lineHeight: 24,
+    textAlign: "center",
+    letterSpacing: 0,
+    marginTop: 8,
+  },
+  groupCard: {
+    backgroundColor: palette.white,
+    borderRadius: 20,
+    paddingHorizontal: 24,
+    paddingVertical: 8,
+    ...premiumShadow,
+  },
+  row: {
+    minHeight: 80,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  rowIcon: {
+    width: 48,
+    height: 48,
+  },
+  rowTitle: {
+    flex: 1,
+    color: palette.primaryText,
+    fontFamily: "Poppins_600SemiBold",
+    fontSize: 18,
+    lineHeight: 24,
+    letterSpacing: 0,
+    marginLeft: 24,
+  },
+  dangerText: {
+    color: palette.danger,
+  },
+  chevronTarget: {
+    width: 48,
+    height: 48,
+    marginLeft: 8,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: palette.divider,
+    marginLeft: 72,
+  },
+  sectionGap: {
+    marginTop: 24,
+  },
+  demoNote: {
+    color: palette.mutedText,
+    fontFamily: "Poppins_400Regular",
+    fontSize: 15,
+    fontStyle: "italic",
+    lineHeight: 24,
+    textAlign: "center",
+    letterSpacing: 0,
+    marginTop: 40,
+  },
+  signOutButton: {
+    minHeight: 64,
+    borderRadius: 16,
     borderWidth: 1,
+    borderColor: palette.divider,
+    marginTop: 40,
+    marginBottom: 32,
+    gap: 16,
   },
-  revokeButtonText: {
-    color: colors.dangerText,
-  },
-  deleteButton: {
-    marginTop: spacing.xs,
-    backgroundColor: colors.dangerSurface,
-    borderWidth: 0,
-  },
-  deleteButtonText: {
-    color: colors.dangerText,
+  signOutText: {
+    color: palette.secondaryText,
+    fontFamily: "Poppins_600SemiBold",
+    fontSize: 18,
+    lineHeight: 24,
+    letterSpacing: 0,
   },
 });

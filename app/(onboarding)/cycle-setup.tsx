@@ -37,6 +37,7 @@ export default function CycleSetupScreen() {
   useEffect(() => preloadFounderQuoteImages(), []);
   const setCycleSetup = useAppStore((state) => state.setCycleSetup);
   const skipCycleSetup = useAppStore((state) => state.skipCycleSetup);
+  const hasSeenFounderQuotes = useAppStore((state) => state.hasSeenFounderQuotes);
   const [userName, setUserName] = useState(store.userName === "Aarya" ? "" : store.userName);
   const [lastPeriodDate, setLastPeriodDate] = useState("This week");
   const [cycleLength, setCycleLength] = useState(store.cycleLength);
@@ -46,6 +47,15 @@ export default function CycleSetupScreen() {
   const compactHeight = height < 720;
   const sidePadding = compactWidth ? spacing.lg : spacing.xl;
   const contentWidth = Math.max(272, Math.min(width - sidePadding * 2, MAX_CONTENT_WIDTH));
+
+  const continueAfterCycleSetup = () => {
+    if (hasSeenFounderQuotes) {
+      router.replace("/(tabs)/home");
+      return;
+    }
+
+    router.push("/(onboarding)/founder-quotes");
+  };
 
   const enterDashboard = () => {
     if (doesNotTrackCycles) {
@@ -58,12 +68,12 @@ export default function CycleSetupScreen() {
         periodLength,
       });
     }
-    router.push("/(onboarding)/founder-quotes");
+    continueAfterCycleSetup();
   };
 
   const skipSetup = () => {
     skipCycleSetup(userName);
-    router.push("/(onboarding)/founder-quotes");
+    continueAfterCycleSetup();
   };
 
   return (

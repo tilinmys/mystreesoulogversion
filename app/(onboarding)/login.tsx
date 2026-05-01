@@ -1,303 +1,396 @@
-import { ChevronLeft, Eye, EyeOff } from "lucide-react-native";
+import { ChevronLeft, Eye, EyeOff, LockKeyhole, Mail, ShieldCheck } from "lucide-react-native";
 import { StatusBar } from "expo-status-bar";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
-  TouchableOpacity,
-  useWindowDimensions,
   View,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  Image,
 } from "react-native";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { SafeScreen } from "@/components/layout/SafeScreen";
-import { PrimaryButton } from "@/components/ui/PrimaryButton";
-import { colors, radius, spacing, shadows } from "@/lib/design-tokens";
+import { colors, radius, spacing } from "@/lib/design-tokens";
+import { useAppStore } from "@/store/app-store";
+
+function nameFromLogin(value: string) {
+  const raw = value.split("@")[0]?.replace(/[._-]+/g, " ").trim();
+  if (!raw) return "beautiful";
+  return raw
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+    .join(" ");
+}
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { width } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+  const acceptConsent = useAppStore((state) => state.acceptConsent);
+  const setCycleSetup = useAppStore((state) => state.setCycleSetup);
+  const setHasSeenBloopIntro = useAppStore((state) => state.setHasSeenBloopIntro);
+  const markFounderQuotesSeen = useAppStore((state) => state.markFounderQuotesSeen);
+  const finishAppTour = useAppStore((state) => state.finishAppTour);
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [hasTriedSubmit, setHasTriedSubmit] = useState(false);
+
+  const emailValue = email.trim();
+  const passwordValue = password.trim();
+  const canSubmit = emailValue.length >= 2 && passwordValue.length >= 4;
+  const helperText = useMemo(() => {
+    if (!hasTriedSubmit || canSubmit) {
+      return "Use any demo email and 4+ character password to restore the returning-user flow.";
+    }
+    if (emailValue.length < 2) return "Enter your email or username.";
+    return "Password must be at least 4 characters for this demo.";
+  }, [canSubmit, emailValue.length, hasTriedSubmit]);
+
+  const handleSignIn = () => {
+    setHasTriedSubmit(true);
+    if (!canSubmit) return;
+
+    acceptConsent();
+    setCycleSetup({
+      userName: nameFromLogin(emailValue),
+      lastPeriodDate: "April 18, 2026",
+      cycleLength: 28,
+      periodLength: 5,
+    });
+    markFounderQuotesSeen();
+    setHasSeenBloopIntro(true);
+    finishAppTour();
+    router.replace("/(onboarding)/login-success");
+  };
 
   return (
-    <SafeScreen bottomInset={false} contentStyle={styles.container}>
+    <SafeAreaView edges={["top", "left", "right"]} style={styles.screen}>
       <StatusBar style="dark" />
-
       <KeyboardAvoidingView
-        style={{ flex: 1 }}
+        style={styles.keyboard}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 40 : 0}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 16 : 0}
       >
-        <ScrollView 
-          contentContainerStyle={styles.scrollContent}
+        <ScrollView
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
+          contentContainerStyle={[styles.content, { paddingBottom: Math.max(insets.bottom, spacing.lg) + spacing.xl }]}
         >
-          {/* Header */}
-          <View style={styles.header}>
-            <TouchableOpacity
-              activeOpacity={0.7}
-              onPress={() => router.back()}
-              style={styles.backButton}
+          <View style={styles.topBar}>
+            <Pressable
+              accessibilityRole="button"
               accessibilityLabel="Go back"
+              onPress={() => (router.canGoBack() ? router.back() : router.replace("/(onboarding)/welcome"))}
+              style={({ pressed }) => [styles.backButton, pressed ? styles.pressed : null]}
             >
-              <ChevronLeft size={24} color={colors.primaryText} />
-            </TouchableOpacity>
+              <ChevronLeft size={22} color={colors.primaryText} strokeWidth={2.4} />
+            </Pressable>
           </View>
 
-          {/* Typography Anchor */}
-          <View style={styles.titleAnchor}>
-            <Text style={styles.title}>Welcome back.</Text>
-            <Text style={styles.subtitle}>Sign in to access your sanctuary.</Text>
+          <View style={styles.hero}>
+            <View style={styles.lockPlate}>
+              <LockKeyhole size={28} color={colors.primaryOrange} strokeWidth={2.2} />
+            </View>
+            <Text maxFontSizeMultiplier={1.1} style={styles.title}>
+              Welcome back
+            </Text>
+            <Text maxFontSizeMultiplier={1.1} style={styles.subtitle}>
+              Sign in to restore your private health sanctuary and continue where you left off.
+            </Text>
           </View>
 
-          {/* Social Logins */}
-          <View style={styles.socialAnchor}>
-            <TouchableOpacity activeOpacity={0.8} style={styles.socialButton}>
-              {/* Note: In a real app, use react-native-svg for precise vectors. Using a generic colored View as placeholder for logo */}
-              <View style={[styles.logoPlaceholder, { backgroundColor: "#DB4437" }]}>
-                <Text style={styles.logoText}>G</Text>
-              </View>
-              <Text style={styles.socialButtonText}>Continue with Google</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity activeOpacity={0.8} style={styles.socialButton}>
-              <View style={[styles.logoPlaceholder, { backgroundColor: "#000000" }]}>
-                <Text style={[styles.logoText, { color: colors.whiteText }]}></Text>
-              </View>
-              <Text style={styles.socialButtonText}>Continue with Apple</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Divider */}
-          <View style={styles.dividerRow}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>or continue with email</Text>
-            <View style={styles.dividerLine} />
-          </View>
-
-          {/* Form */}
-          <View style={styles.formAnchor}>
+          <View style={styles.formCard}>
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Email or Username</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Enter your email"
-                placeholderTextColor={colors.mutedText}
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoComplete="email"
-              />
+              <Text style={styles.label}>Email or username</Text>
+              <View style={styles.inputShell}>
+                <Mail size={18} color={colors.mutedText} strokeWidth={2} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="you@example.com"
+                  placeholderTextColor={colors.mutedText}
+                  value={email}
+                  onChangeText={setEmail}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoComplete="email"
+                  returnKeyType="next"
+                />
+              </View>
             </View>
 
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Password</Text>
-              <View style={styles.passwordContainer}>
+              <View style={styles.inputShell}>
+                <LockKeyhole size={18} color={colors.mutedText} strokeWidth={2} />
                 <TextInput
-                  style={styles.passwordInput}
-                  placeholder="Enter your password"
+                  style={styles.input}
+                  placeholder="Enter password"
                   placeholderTextColor={colors.mutedText}
                   value={password}
                   onChangeText={setPassword}
                   secureTextEntry={!showPassword}
                   autoCapitalize="none"
+                  returnKeyType="done"
+                  onSubmitEditing={handleSignIn}
                 />
-                <TouchableOpacity
-                  activeOpacity={0.7}
-                  onPress={() => setShowPassword(!showPassword)}
-                  style={styles.eyeIcon}
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={showPassword ? "Hide password" : "Show password"}
+                  onPress={() => setShowPassword((value) => !value)}
+                  style={styles.iconButton}
                 >
                   {showPassword ? (
-                    <EyeOff size={20} color={colors.secondaryText} />
+                    <EyeOff size={19} color={colors.secondaryText} strokeWidth={2} />
                   ) : (
-                    <Eye size={20} color={colors.secondaryText} />
+                    <Eye size={19} color={colors.secondaryText} strokeWidth={2} />
                   )}
-                </TouchableOpacity>
+                </Pressable>
               </View>
             </View>
 
-            <TouchableOpacity activeOpacity={0.7} style={styles.forgotPassword}>
-              <Text style={styles.forgotPasswordText}>Forgot password?</Text>
-            </TouchableOpacity>
+            <Text
+              maxFontSizeMultiplier={1.1}
+              style={[styles.helper, hasTriedSubmit && !canSubmit ? styles.helperError : null]}
+            >
+              {helperText}
+            </Text>
 
-            <PrimaryButton
-              label="Sign In"
-              onPress={() => router.push("/(tabs)/home")}
-              style={styles.signInBtn}
-              textStyle={styles.signInBtnText}
-            />
+            <Pressable
+              accessibilityRole="button"
+              accessibilityState={{ disabled: !canSubmit }}
+              accessibilityLabel="Sign in"
+              onPress={handleSignIn}
+              style={({ pressed }) => [
+                styles.signInButton,
+                !canSubmit ? styles.signInButtonDisabled : null,
+                pressed && canSubmit ? styles.pressed : null,
+              ]}
+            >
+              <Text style={[styles.signInText, !canSubmit ? styles.signInTextDisabled : null]}>Sign in</Text>
+            </Pressable>
+          </View>
+
+          <View style={styles.trustRow}>
+            <ShieldCheck size={17} color={colors.softTeal} strokeWidth={2.2} />
+            <Text maxFontSizeMultiplier={1.1} style={styles.trustText}>
+              Demo sign-in restores local progress only. No real password leaves this device.
+            </Text>
+          </View>
+
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>New here?</Text>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Create a new sanctuary"
+              onPress={() => router.replace("/(onboarding)/welcome")}
+              style={styles.footerLinkButton}
+            >
+              <Text style={styles.footerLink}>Create a new sanctuary</Text>
+            </Pressable>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeScreen>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  screen: {
     flex: 1,
-    backgroundColor: colors.warmWhite,
+    backgroundColor: colors.backgroundWhite,
   },
-  scrollContent: {
+  keyboard: {
+    flex: 1,
+  },
+  content: {
     flexGrow: 1,
-    paddingHorizontal: spacing.xl,
-    paddingBottom: spacing.xxl,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.xs,
   },
-  header: {
-    height: 56,
+  topBar: {
+    height: 52,
+    justifyContent: "center",
+  },
+  backButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: colors.backgroundWhite,
+    borderWidth: 1,
+    borderColor: colors.divider,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: colors.coralShadow,
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 2,
+  },
+  pressed: {
+    opacity: 0.86,
+    transform: [{ scale: 0.99 }],
+  },
+  hero: {
+    alignItems: "center",
+    paddingTop: spacing.md,
+    paddingBottom: spacing.xl,
+  },
+  lockPlate: {
+    width: 64,
+    height: 64,
+    borderRadius: 24,
+    backgroundColor: colors.orangeSoftSurface,
+    borderWidth: 1,
+    borderColor: colors.orangeBorder,
+    alignItems: "center",
     justifyContent: "center",
     marginBottom: spacing.md,
   },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.backgroundWhite,
-    alignItems: "center",
-    justifyContent: "center",
-    ...shadows.sm,
-  },
-  titleAnchor: {
-    marginBottom: spacing.xl,
-  },
   title: {
     color: colors.primaryText,
-    fontFamily: "PlayfairDisplay_600SemiBold",
-    fontSize: 34,
-    lineHeight: 42,
-    marginBottom: spacing.xs,
+    fontFamily: "Poppins_600SemiBold",
+    fontSize: 32,
+    lineHeight: 40,
+    textAlign: "center",
   },
   subtitle: {
     color: colors.secondaryText,
     fontFamily: "Poppins_400Regular",
-    fontSize: 16,
-    lineHeight: 24,
+    fontSize: 15,
+    lineHeight: 23,
+    textAlign: "center",
+    marginTop: spacing.xs,
+    maxWidth: 330,
   },
-  socialAnchor: {
-    gap: spacing.sm,
-    marginBottom: spacing.xl,
-  },
-  socialButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    height: 54,
-    borderRadius: radius.large,
+  formCard: {
+    borderRadius: 28,
     backgroundColor: colors.backgroundWhite,
     borderWidth: 1,
     borderColor: colors.divider,
-    ...shadows.sm,
-  },
-  logoPlaceholder: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-    position: "absolute",
-    left: spacing.lg,
-  },
-  logoText: {
-    color: "white",
-    fontSize: 14,
-    fontWeight: "bold",
-  },
-  socialButtonText: {
-    color: colors.primaryText,
-    fontFamily: "Poppins_500Medium",
-    fontSize: 15,
-  },
-  dividerRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: spacing.xl,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: colors.divider,
-  },
-  dividerText: {
-    color: colors.secondaryText,
-    fontFamily: "Poppins_400Regular",
-    fontSize: 13,
-    paddingHorizontal: spacing.md,
-  },
-  formAnchor: {
-    gap: spacing.lg,
+    padding: spacing.md,
+    shadowColor: colors.coralShadow,
+    shadowOpacity: 0.05,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 3,
   },
   inputGroup: {
-    gap: spacing.xs,
+    marginBottom: spacing.md,
   },
   label: {
     color: colors.primaryText,
-    fontFamily: "Poppins_500Medium",
-    fontSize: 14,
-    marginLeft: spacing.xs,
+    fontFamily: "Poppins_600SemiBold",
+    fontSize: 13,
+    lineHeight: 18,
+    marginBottom: spacing.xs,
   },
-  input: {
-    height: 56,
-    borderRadius: radius.medium,
+  inputShell: {
+    minHeight: 54,
+    borderRadius: 14,
     backgroundColor: colors.backgroundWhite,
     borderWidth: 1,
-    borderColor: colors.cardBorder,
-    paddingHorizontal: spacing.md,
-    fontFamily: "Poppins_400Regular",
-    fontSize: 15,
-    color: colors.primaryText,
-  },
-  passwordContainer: {
+    borderColor: colors.divider,
+    paddingLeft: spacing.md,
     flexDirection: "row",
     alignItems: "center",
-    height: 56,
-    borderRadius: radius.medium,
-    backgroundColor: colors.backgroundWhite,
-    borderWidth: 1,
-    borderColor: colors.cardBorder,
   },
-  passwordInput: {
+  input: {
     flex: 1,
-    height: "100%",
-    paddingHorizontal: spacing.md,
+    minHeight: 54,
+    paddingHorizontal: spacing.sm,
+    color: colors.primaryText,
     fontFamily: "Poppins_400Regular",
     fontSize: 15,
-    color: colors.primaryText,
   },
-  eyeIcon: {
-    padding: spacing.md,
+  iconButton: {
+    width: 48,
+    height: 48,
+    alignItems: "center",
+    justifyContent: "center",
   },
-  forgotPassword: {
-    alignSelf: "flex-end",
-    marginTop: -spacing.sm,
-    paddingVertical: spacing.xs,
+  helper: {
+    color: colors.secondaryText,
+    fontFamily: "Poppins_400Regular",
+    fontSize: 12,
+    lineHeight: 18,
+    marginTop: -spacing.xs,
+    marginBottom: spacing.md,
   },
-  forgotPasswordText: {
-    color: colors.primaryOrange,
-    fontFamily: "Poppins_500Medium",
-    fontSize: 13,
+  helperError: {
+    color: colors.dangerText,
   },
-  signInBtn: {
-    marginTop: spacing.sm,
-    height: 56,
-    borderRadius: radius.large,
-    shadowColor: colors.primaryOrange,
-    shadowOpacity: 0.15,
-    shadowRadius: 20,
+  signInButton: {
+    minHeight: 54,
+    borderRadius: 27,
+    backgroundColor: colors.primaryOrange,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: colors.orangeShadow,
+    shadowOpacity: 0.12,
+    shadowRadius: 18,
     shadowOffset: { width: 0, height: 10 },
     elevation: 4,
   },
-  signInBtnText: {
+  signInButtonDisabled: {
+    backgroundColor: colors.softDisabled,
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+  signInText: {
+    color: colors.whiteText,
     fontFamily: "Poppins_600SemiBold",
-    letterSpacing: 1,
     fontSize: 15,
+    lineHeight: 21,
+  },
+  signInTextDisabled: {
+    color: colors.disabledText,
+  },
+  trustRow: {
+    minHeight: 56,
+    borderRadius: 18,
+    backgroundColor: colors.tealSoftSurface,
+    paddingHorizontal: spacing.md,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
+    marginTop: spacing.md,
+  },
+  trustText: {
+    flex: 1,
+    color: colors.primaryText,
+    fontFamily: "Poppins_500Medium",
+    fontSize: 12,
+    lineHeight: 18,
+  },
+  footer: {
+    marginTop: "auto",
+    paddingTop: spacing.xl,
+    alignItems: "center",
+  },
+  footerText: {
+    color: colors.secondaryText,
+    fontFamily: "Poppins_400Regular",
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  footerLinkButton: {
+    minHeight: 44,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: spacing.md,
+  },
+  footerLink: {
+    color: colors.primaryText,
+    fontFamily: "Poppins_600SemiBold",
+    fontSize: 14,
+    lineHeight: 20,
+    textDecorationLine: "underline",
   },
 });

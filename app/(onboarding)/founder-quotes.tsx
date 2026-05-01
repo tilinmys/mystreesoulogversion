@@ -18,6 +18,7 @@ import {
   markFounderImagesForImmediatePreload,
 } from "@/lib/image-preloader";
 import { colors, radius, shadows, spacing } from "@/lib/design-tokens";
+import { useAppStore } from "@/store/app-store";
 
 export default function FounderQuotesScreen() {
   const router = useRouter();
@@ -27,6 +28,7 @@ export default function FounderQuotesScreen() {
   const [readyCount, setReadyCount] = useState(0);
   const fadeFounder = useRef(new Animated.Value(1)).current;
   const fadeCofounder = useRef(new Animated.Value(0)).current;
+  const markFounderQuotesSeen = useAppStore((state) => state.markFounderQuotesSeen);
 
   useEffect(() => {
     void markFounderImagesForImmediatePreload();
@@ -87,6 +89,7 @@ export default function FounderQuotesScreen() {
       return;
     }
 
+    markFounderQuotesSeen();
     router.replace("/(tabs)/home");
   };
 

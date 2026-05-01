@@ -15,8 +15,8 @@ import { tourSteps } from "@/lib/tour-steps";
 import { colors, radius, shadows, spacing } from "@/lib/design-tokens";
 
 // ─── Tour card design tokens ───────────────────────────────────────────────────
-const CARD_BG      = "#FFF5F6"; // Soft pinkish blush
-const CARD_BORDER  = colors.paleCoral;
+const CARD_BG      = colors.backgroundWhite;
+const CARD_BORDER  = colors.orangeBorder;
 const CARD_ACCENT  = colors.primaryOrange;
 const CARD_TITLE   = colors.primaryText;
 const CARD_BODY    = colors.secondaryText;
@@ -67,7 +67,7 @@ export function AppTourOverlay({ step, targetLayout, onNext, onSkip, onFinish }:
   const ch = hasTarget ? targetLayout!.height + CUTOUT_PAD * 2 : 0;
 
   // ── Card height — auto via minHeight so longer navbar copy fits ─────────────
-  const CARD_MIN_H = 178;
+  const CARD_MIN_H = 196;
 
   // ── Collision-aware anchor side ─────────────────────────────────────────────
   const cardTopWhenBottom = height - insets.bottom - NAV_CLEARANCE - CARD_MIN_H;
@@ -155,18 +155,18 @@ export function AppTourOverlay({ step, targetLayout, onNext, onSkip, onFinish }:
         >
           {isAskPhase ? (
             <>
-              <Text style={styles.title}>Welcome to MyStree Soul 🌸</Text>
+              <Text style={styles.title}>Your quick sanctuary tour</Text>
               <Text style={styles.body}>
-                Take a 30-second tour to see how your health companion works.
+                See where Bloop, settings, daily insights, and your private vault live after the latest navigation update.
               </Text>
               <View style={styles.actions}>
                 <TouchableOpacity activeOpacity={0.7} onPress={onSkip}
                   style={styles.ghostBtn} accessibilityRole="button">
-                  <Text style={styles.ghostText}>Skip Tour</Text>
+                  <Text style={styles.ghostText}>Skip</Text>
                 </TouchableOpacity>
                 <TouchableOpacity activeOpacity={0.85} onPress={onNext}
                   style={styles.primaryBtn} accessibilityRole="button">
-                  <Text style={styles.primaryText}>Start 30-Second Tour</Text>
+                  <Text style={styles.primaryText}>Begin tour</Text>
                 </TouchableOpacity>
               </View>
             </>
@@ -176,15 +176,15 @@ export function AppTourOverlay({ step, targetLayout, onNext, onSkip, onFinish }:
                 <View style={styles.stepPill}>
                   <Text style={styles.stepPillText}>{step + 1} / {tourSteps.length}</Text>
                 </View>
-                <Text style={styles.title} numberOfLines={1}>{currentStep.title}</Text>
+                <Text style={styles.title} numberOfLines={2}>{currentStep.title}</Text>
               </View>
 
-              <Text style={styles.body} numberOfLines={4}>{currentStep.body}</Text>
+              <Text style={styles.body} numberOfLines={5}>{currentStep.body}</Text>
 
               <View style={styles.actions}>
                 <TouchableOpacity activeOpacity={0.7} onPress={onSkip}
                   style={styles.ghostBtn} accessibilityRole="button">
-                  <Text style={[styles.ghostText, { textDecorationLine: "underline" }]}>Skip Tour</Text>
+                  <Text style={[styles.ghostText, { textDecorationLine: "underline" }]}>Skip</Text>
                 </TouchableOpacity>
                 <View style={styles.dots}>
                   {tourSteps.map((_, i) => (
@@ -213,7 +213,7 @@ const styles = StyleSheet.create({
     zIndex: 9999,
   },
   overlayPanel: {
-    backgroundColor: "rgba(37, 25, 21, 0.45)", // darker overlay to make pink pop
+    backgroundColor: "rgba(45, 42, 38, 0.36)",
   },
 
   spotlightRing: {
@@ -263,12 +263,12 @@ const styles = StyleSheet.create({
     position: "absolute",
     left: CARD_MARGIN,
     right: CARD_MARGIN,
-    minHeight: 178,
+    minHeight: 196,
     backgroundColor: CARD_BG,
     borderRadius: 24,
     borderWidth: 1.5,
     borderColor: CARD_BORDER,
-    paddingHorizontal: spacing.xl,
+    paddingHorizontal: spacing.lg,
     paddingTop: spacing.lg,
     paddingBottom: spacing.lg,
     flexDirection: "column",

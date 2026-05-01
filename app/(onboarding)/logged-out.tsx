@@ -1,9 +1,9 @@
-import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { ChevronRight, RotateCcw, ShieldCheck } from "lucide-react-native";
+import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { PrimaryButton } from "@/components/ui/PrimaryButton";
-import { colors, radius, spacing } from "@/lib/design-tokens";
+import { colors, spacing } from "@/lib/design-tokens";
 
 const animeGirl = require("@/images/webp/animegirl.webp");
 
@@ -11,40 +11,63 @@ export default function LoggedOutScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
-  const continueToLogin = () => {
-    router.replace("/(onboarding)/welcome");
-  };
-
   return (
-    <SafeAreaView style={styles.screen}>
-      <TouchableOpacity
-        accessibilityRole="button"
-        accessibilityLabel="Log in"
-        activeOpacity={0.75}
-        onPress={continueToLogin}
-        style={[styles.loginButton, { top: insets.top + spacing.sm }]}
-      >
-        <Text style={styles.loginText}>Login</Text>
-      </TouchableOpacity>
+    <SafeAreaView edges={["top", "left", "right"]} style={styles.screen}>
+      <View style={[styles.content, { paddingBottom: Math.max(insets.bottom, spacing.lg) }]}>
+        <View style={styles.topRow}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Create a new account"
+            onPress={() => router.replace("/(onboarding)/welcome")}
+            style={({ pressed }) => [styles.topButton, pressed ? styles.pressed : null]}
+          >
+            <Text style={styles.topButtonText}>New account</Text>
+          </Pressable>
+        </View>
 
-      <View style={styles.hero}>
-        <Image
-          source={animeGirl}
-          resizeMode="contain"
-          style={styles.heroImage}
-          accessibilityLabel="Woman holding a phone"
-        />
-      </View>
+        <View style={styles.illustrationWrap}>
+          <Image source={animeGirl} resizeMode="contain" style={styles.illustration} />
+        </View>
 
-      <View style={styles.copy}>
-        <Text style={styles.title}>Welcome back!</Text>
-        <Text style={styles.body}>
-          Continue to MyStree Soul whenever you are ready to return to your health journey.
-        </Text>
-      </View>
+        <View style={styles.copy}>
+          <View style={styles.statusPill}>
+            <ShieldCheck size={15} color={colors.softTeal} strokeWidth={2.2} />
+            <Text style={styles.statusText}>Signed out safely</Text>
+          </View>
+          <Text maxFontSizeMultiplier={1.1} style={styles.title}>
+            Ready when you are
+          </Text>
+          <Text maxFontSizeMultiplier={1.1} style={styles.body}>
+            Sign in to restore your saved profile, cycle rhythm, records, and privacy settings.
+          </Text>
+        </View>
 
-      <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, spacing.lg) }]}>
-        <PrimaryButton label="Continue" onPress={continueToLogin} style={styles.cta} />
+        <View style={styles.edgeCaseCard}>
+          <RotateCcw size={18} color={colors.primaryOrange} strokeWidth={2.2} />
+          <Text maxFontSizeMultiplier={1.1} style={styles.edgeCaseText}>
+            If you deleted or reset demo data, sign-in will rebuild a clean returning-user demo profile.
+          </Text>
+        </View>
+
+        <View style={styles.footer}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Go to login"
+            onPress={() => router.replace("/(onboarding)/login")}
+            style={({ pressed }) => [styles.primaryButton, pressed ? styles.pressed : null]}
+          >
+            <Text style={styles.primaryText}>Log in</Text>
+            <ChevronRight size={18} color={colors.primaryText} strokeWidth={2.3} />
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Continue as new user"
+            onPress={() => router.replace("/(onboarding)/welcome")}
+            style={({ pressed }) => [styles.secondaryButton, pressed ? styles.pressed : null]}
+          >
+            <Text style={styles.secondaryText}>Start fresh instead</Text>
+          </Pressable>
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -54,75 +77,140 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: colors.backgroundWhite,
-    alignItems: "center",
   },
-  loginButton: {
-    position: "absolute",
-    right: spacing.lg,
-    zIndex: 2,
-    minHeight: 44,
+  content: {
+    flex: 1,
+    paddingHorizontal: spacing.lg,
+  },
+  topRow: {
+    minHeight: 54,
+    alignItems: "flex-end",
+    justifyContent: "center",
+  },
+  topButton: {
+    minHeight: 40,
+    borderRadius: 20,
     paddingHorizontal: spacing.md,
-    borderRadius: radius.button,
-    backgroundColor: colors.orangeSoftSurface,
+    backgroundColor: colors.backgroundWhite,
     borderWidth: 1,
-    borderColor: colors.orangeBorder,
+    borderColor: colors.divider,
     alignItems: "center",
     justifyContent: "center",
   },
-  loginText: {
-    color: colors.primaryOrange,
+  topButtonText: {
+    color: colors.primaryText,
     fontFamily: "Poppins_600SemiBold",
-    fontSize: 14,
-    lineHeight: 20,
+    fontSize: 13,
+    lineHeight: 18,
   },
-  hero: {
-    width: "100%",
-    height: "46%",
-    backgroundColor: colors.warmWhite,
+  illustrationWrap: {
+    height: "34%",
+    minHeight: 210,
+    maxHeight: 320,
     alignItems: "center",
     justifyContent: "flex-end",
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.xl,
   },
-  heroImage: {
+  illustration: {
     width: "100%",
-    height: "92%",
-    maxWidth: 430,
+    height: "100%",
+    maxWidth: 390,
   },
   copy: {
-    width: "100%",
-    maxWidth: 380,
     alignItems: "center",
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.xxl,
+    paddingTop: spacing.xl,
+  },
+  statusPill: {
+    minHeight: 32,
+    borderRadius: 16,
+    backgroundColor: colors.tealSoftSurface,
+    paddingHorizontal: spacing.sm,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
+    marginBottom: spacing.md,
+  },
+  statusText: {
+    color: colors.primaryText,
+    fontFamily: "Poppins_600SemiBold",
+    fontSize: 12,
+    lineHeight: 17,
   },
   title: {
     color: colors.primaryText,
     fontFamily: "Poppins_600SemiBold",
-    fontSize: 32,
-    lineHeight: 40,
+    fontSize: 30,
+    lineHeight: 38,
     textAlign: "center",
-    letterSpacing: 0,
   },
   body: {
     color: colors.secondaryText,
     fontFamily: "Poppins_400Regular",
-    fontSize: 19,
-    lineHeight: 31,
+    fontSize: 15,
+    lineHeight: 24,
     textAlign: "center",
+    marginTop: spacing.sm,
+    maxWidth: 340,
+  },
+  edgeCaseCard: {
+    minHeight: 64,
+    borderRadius: 20,
+    backgroundColor: colors.backgroundWhite,
+    borderWidth: 1,
+    borderColor: colors.divider,
+    paddingHorizontal: spacing.md,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
     marginTop: spacing.lg,
-    letterSpacing: 0,
+  },
+  edgeCaseText: {
+    flex: 1,
+    color: colors.secondaryText,
+    fontFamily: "Poppins_500Medium",
+    fontSize: 12,
+    lineHeight: 18,
   },
   footer: {
-    width: "100%",
     marginTop: "auto",
-    alignItems: "center",
-    paddingHorizontal: spacing.lg,
+    gap: spacing.sm,
     paddingTop: spacing.lg,
   },
-  cta: {
-    width: "100%",
-    maxWidth: 260,
-    borderRadius: radius.large,
+  primaryButton: {
+    minHeight: 56,
+    borderRadius: 28,
+    backgroundColor: colors.backgroundWhite,
+    borderWidth: 1.5,
+    borderColor: colors.primaryOrange,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing.xs,
+    shadowColor: colors.coralShadow,
+    shadowOpacity: 0.05,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 2,
+  },
+  primaryText: {
+    color: colors.primaryText,
+    fontFamily: "Poppins_600SemiBold",
+    fontSize: 15,
+    lineHeight: 21,
+  },
+  secondaryButton: {
+    minHeight: 48,
+    borderRadius: 24,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  secondaryText: {
+    color: colors.secondaryText,
+    fontFamily: "Poppins_600SemiBold",
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  pressed: {
+    opacity: 0.86,
+    transform: [{ scale: 0.99 }],
   },
 });

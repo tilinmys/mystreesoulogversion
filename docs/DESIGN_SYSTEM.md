@@ -158,6 +158,17 @@ Avoid:
 - Multiple stacked shadows.
 - Default gray/black shadows.
 
+## Horizontal Showcase Cards
+- Use a horizontal `FlatList` when a dashboard section presents multiple destination cards.
+- The carousel content starts at 32px horizontal padding and keeps 16px gaps between cards.
+- Full Home-page insight rails may use alternating premium pastel surfaces: Soft Pink, Warm Yellow, and Premium Orange.
+- Women-health insight rails may also use a Calming Red panel for cycle consistency, pain, or doctor-prep moments, with white text when contrast requires it.
+- Card text uses Primary Text and Secondary Text only; no pastel body copy.
+- Use local assets or vector icons for card visuals. Avoid network images inside dashboard cards.
+- Keep each card preview compact, tappable, and routed to an existing screen or modal.
+- Use subtle coral/orange-tinted shadows: offset Y 16, blur/radius 32, opacity around 0.08.
+- Insight rail CTAs should use elevated soft-UI pill styling: at least 48px high, fully rounded, solid contrasting fill, white top highlight, bold centered text, and a color-matched glow shadow.
+
 ## Buttons
 
 ### Primary Button
@@ -206,6 +217,16 @@ Avoid:
 - Active icon/text: Orange `#F97316`.
 - Inactive icon/text: Muted Text `#9B928A`.
 - Must respect safe area and never turn Bloop into a tab.
+- Profile/settings is reached from the Home header avatar, not as a visible tab item.
+
+## Settings Surface
+- Settings screen title: calm, centered, and trust-led.
+- Use White grouped panels on Warm White background with 20px padding and warm low-opacity shadows.
+- Privacy and control actions must appear before personalization or support.
+- Dangerous actions use Danger Surface and Danger Text, never saturated red.
+- Placeholder controls should be labeled clearly but subdued with soft surface pills.
+- Avoid referral, social-profile, confusing secret-chat, and premium upsell blocks in settings.
+- Always include the legal disclaimer: "Not a medical diagnosis tool."
 
 ## Cards
 Cards must use:

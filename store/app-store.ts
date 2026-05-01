@@ -45,6 +45,7 @@ type DemoState = {
   hasCompletedOnboarding: boolean;
   onboardingCompleted: boolean;
   hasSeenBloopIntro: boolean;
+  hasSeenFounderQuotes: boolean;
   // Profile
   avatarUri: string;
   dateOfBirth: string;
@@ -53,6 +54,7 @@ type DemoState = {
   setHasHydrated: (value: boolean) => void;
   acceptConsent: () => void;
   setHasSeenBloopIntro: (value: boolean) => void;
+  markFounderQuotesSeen: () => void;
   setHasCompletedOnboarding: (value: boolean) => void;
   setUserName: (name: string) => void;
   toggleGoal: (goal: string) => void;
@@ -134,6 +136,7 @@ const initialState = {
   hasCompletedOnboarding: false,
   onboardingCompleted: false,
   hasSeenBloopIntro: false,
+  hasSeenFounderQuotes: false,
   hasSeenAppTour: false,
   tourStep: 0,
   isBloopVisible: true,
@@ -155,6 +158,7 @@ export const useAppStore = create<DemoState>()(
           hasSeenBloopIntro,
           tourStep: hasSeenBloopIntro && state.tourStep < 0 ? 0 : state.tourStep,
         })),
+      markFounderQuotesSeen: () => set({ hasSeenFounderQuotes: true }),
       setHasCompletedOnboarding: (value) => set({ hasCompletedOnboarding: value }),
       setUserName: (userName) => set({ userName }),
       toggleGoal: (goal) =>
@@ -252,6 +256,7 @@ export const useAppStore = create<DemoState>()(
         hasCompletedOnboarding: state.hasCompletedOnboarding,
         onboardingCompleted: state.onboardingCompleted,
         hasSeenBloopIntro: state.hasSeenBloopIntro,
+        hasSeenFounderQuotes: state.hasSeenFounderQuotes,
         hasSeenAppTour: state.hasSeenAppTour,
         tourStep: state.tourStep,
       }),
