@@ -3,7 +3,6 @@ import { useRouter } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Animated,
-  Image,
   StatusBar,
   StyleSheet,
   Text,
@@ -11,6 +10,7 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
+import { Image as ExpoImage } from "expo-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import {
@@ -19,6 +19,8 @@ import {
 } from "@/lib/image-preloader";
 import { colors, radius, shadows, spacing } from "@/lib/design-tokens";
 import { useAppStore } from "@/store/app-store";
+
+const AnimatedExpoImage = Animated.createAnimatedComponent(ExpoImage);
 
 export default function FounderQuotesScreen() {
   const router = useRouter();
@@ -97,23 +99,19 @@ export default function FounderQuotesScreen() {
     <View style={[styles.root, { width, height }]}>
       <StatusBar hidden />
 
-      <Animated.Image
+      <AnimatedExpoImage
         source={founderQuoteImages[0]}
         style={[styles.image, { opacity: fadeFounder }]}
-        resizeMode="cover"
-        onLoadEnd={() => setReadyCount((count) => Math.min(count + 1, 2))}
+        contentFit="cover"
         accessibilityLabel="Founder quote from Dr. Smitha A.P"
       />
 
-      <Animated.Image
+      <AnimatedExpoImage
         source={founderQuoteImages[1]}
         style={[styles.image, { opacity: fadeCofounder }]}
-        resizeMode="cover"
-        onLoadEnd={() => setReadyCount((count) => Math.min(count + 1, 2))}
+        contentFit="cover"
         accessibilityLabel="Co-founder quote from Dr. Surbhi Sinha"
       />
-
-      {readyCount === 0 ? <View style={styles.preloadWash} pointerEvents="none" /> : null}
 
       <TouchableOpacity
         activeOpacity={0.72}
