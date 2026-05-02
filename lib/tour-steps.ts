@@ -1,59 +1,129 @@
+import {
+  Bot,
+  CalendarHeart,
+  CircleUser,
+  Compass,
+  Heart,
+  LayoutDashboard,
+  Sparkles,
+  Vault,
+} from "lucide-react-native";
+import type { LucideIcon } from "lucide-react-native";
+
 export type TourStepData = {
   id: string;
   targetKey: string;
+  /** Short kicker label above the title */
+  kicker: string;
   title: string;
   body: string;
   buttonText: string;
+  icon: LucideIcon;
+  /** Per-step color theme — keeps each step visually distinct */
+  theme: {
+    accent: string;      // pill, active dot, button bg
+    softBg: string;      // card tint / icon container
+    iconTint: string;    // icon stroke color
+  };
 };
 
 export const tourSteps: TourStepData[] = [
   {
-    id: "step-1",
+    id: "step-bloop",
     targetKey: "bloopButton",
-    title: "Bloop stays close",
-    body: "Tap Bloop anytime you want to talk through mood shifts, cramps, cycle questions, or doctor-prep notes.",
-    buttonText: "Show profile",
+    kicker: "Your companion",
+    title: "Meet Bloop — always nearby",
+    body: "Tap Bloop anytime to talk through mood shifts, cramps, cycle questions, or to prepare doctor-ready notes.",
+    buttonText: "Next →",
+    icon: Bot,
+    theme: {
+      accent: "#F97316",
+      softBg: "#FFF3EC",
+      iconTint: "#EA580C",
+    },
   },
   {
-    id: "step-2",
+    id: "step-profile",
     targetKey: "profileAvatar",
-    title: "Profile and settings",
-    body: "Your profile, privacy controls, reminders, Bloop settings, and delete/reset data actions live behind this avatar now.",
-    buttonText: "Show dashboard",
+    kicker: "Your space",
+    title: "Profile & privacy controls",
+    body: "Privacy settings, reminders, Bloop preferences, and all account actions live behind your avatar.",
+    buttonText: "Next →",
+    icon: CircleUser,
+    theme: {
+      accent: "#D946A8",
+      softBg: "#FCE7F3",
+      iconTint: "#BE185D",
+    },
   },
   {
-    id: "step-3",
+    id: "step-dashboard",
     targetKey: "cycleSummary",
-    title: "Today at a glance",
-    body: "Start with your cycle prediction and current rhythm before deciding what to log or review.",
-    buttonText: "Show insights",
+    kicker: "Today's rhythm",
+    title: "Your day at a glance",
+    body: "See cycle predictions and your current phase before deciding what to log or review.",
+    buttonText: "Next →",
+    icon: LayoutDashboard,
+    theme: {
+      accent: "#5BBFB5",
+      softBg: "#E8F7F5",
+      iconTint: "#0F766E",
+    },
   },
   {
-    id: "step-4",
+    id: "step-insights",
     targetKey: "dailyInsights",
-    title: "Curated daily insights",
-    body: "Swipe these cards for cycle guidance, symptom patterns, smart checks, and doctor-prep shortcuts.",
-    buttonText: "Show check-in",
+    kicker: "Curated for you",
+    title: "Swipe daily insights",
+    body: "Personalized cards covering cycle guidance, symptom patterns, smart health checks, and doctor-prep shortcuts.",
+    buttonText: "Next →",
+    icon: Sparkles,
+    theme: {
+      accent: "#F59E0B",
+      softBg: "#FEF3C7",
+      iconTint: "#B45309",
+    },
   },
   {
-    id: "step-5",
+    id: "step-checkin",
     targetKey: "dailyCheckIn",
-    title: "Quick daily check-in",
-    body: "Log mood, pain, and energy in seconds. These small entries make your pattern history more useful.",
-    buttonText: "Show navbar",
+    kicker: "Quick & gentle",
+    title: "30-second daily check-in",
+    body: "Log mood, pain, and energy in a tap. Small entries today build your long-term pattern history.",
+    buttonText: "Next →",
+    icon: Heart,
+    theme: {
+      accent: "#FF8A7A",
+      softBg: "#FFE8E3",
+      iconTint: "#DC2626",
+    },
   },
   {
-    id: "step-6",
+    id: "step-navbar",
     targetKey: "tabBar",
-    title: "Focused navigation",
-    body: "The bottom bar is now focused on Home, Cycle, and Vault. Profile and settings stay in the top avatar.",
-    buttonText: "Show vault",
+    kicker: "Navigate with ease",
+    title: "Home · Cycle · Vault",
+    body: "Three focused tabs keep everything within reach. Your profile and settings stay in the top avatar.",
+    buttonText: "Next →",
+    icon: Compass,
+    theme: {
+      accent: "#8B5CF6",
+      softBg: "#EDE9FE",
+      iconTint: "#6D28D9",
+    },
   },
   {
-    id: "step-7",
+    id: "step-vault",
     targetKey: "vaultPreview",
-    title: "Memory Vault",
-    body: "Keep health records, notes, and doctor-ready summaries organized in one private place.",
-    buttonText: "Start using app",
+    kicker: "Private & secure",
+    title: "Your Memory Vault",
+    body: "Health records, personal notes, and doctor-ready summaries — organized and encrypted on your device.",
+    buttonText: "Start exploring ✨",
+    icon: Vault,
+    theme: {
+      accent: "#F97316",
+      softBg: "#FFF3EC",
+      iconTint: "#EA580C",
+    },
   },
 ];

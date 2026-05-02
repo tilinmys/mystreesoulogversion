@@ -16,7 +16,6 @@ import { Link } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
   FlatList,
-  Image,
   LayoutChangeEvent,
   LayoutRectangle,
   Pressable,
@@ -26,6 +25,7 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
+import { Image } from "expo-image";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { BloopIntroOverlay } from "@/components/bloop/BloopIntroOverlay";
@@ -414,7 +414,7 @@ export default function HomeScreen() {
                 <Text style={styles.checkInKicker}>Bloop assisted</Text>
                 <Text style={styles.checkInTitle}>Smart Check</Text>
               </View>
-              <Image source={bloopImage} resizeMode="contain" style={styles.checkInBloop} />
+              <Image source={bloopImage} contentFit="contain" transition={300} style={styles.checkInBloop} />
             </View>
             <Text style={styles.checkInBody}>
               Track small changes today so your patterns become easier to understand tomorrow.
@@ -686,7 +686,7 @@ function SmartCheckPreview() {
           Tracking small changes helps Bloop read long-term hormonal harmony.
         </Text>
       </View>
-      <Image source={bloopImage} resizeMode="contain" style={styles.bloopPreviewImage} />
+      <Image source={bloopImage} contentFit="contain" transition={300} style={styles.bloopPreviewImage} />
     </View>
   );
 }
@@ -790,7 +790,7 @@ function UpgradePreview() {
         </View>
       </View>
       <View style={styles.bloopPremium}>
-        <Image source={bloopImage} resizeMode="contain" style={styles.bloopPremiumImage} />
+        <Image source={bloopImage} contentFit="contain" transition={300} style={styles.bloopPremiumImage} />
         <Text style={styles.previewText}>Bloop AI protects your privacy.</Text>
       </View>
     </View>

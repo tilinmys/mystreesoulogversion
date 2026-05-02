@@ -1,31 +1,39 @@
+/**
+ * AppTourOverlay.tsx
+ *
+ * Premium guided tutorial overlay for MyStree Soul.
+ *
+ * Design highlights:
+ * - Per-step color theming (accent, soft surface, icon tint)
+ * - Glassmorphism backdrop with spotlight cutout
+ * - Icon badge with soft circular container
+ * - Animated progress bar spanning all steps
+ * - Kicker label above headline for editorial feel
+ * - Spring-scale + fade entrance animation per step
+ * - Accessible touch targets ≥ 48pt
+ */
 import React, { useEffect, useRef } from "react";
 import {
   Animated,
   LayoutRectangle,
   Modal,
+  Pressable,
   StyleSheet,
   Text,
-  TouchableOpacity,
   useWindowDimensions,
   View,
 } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import { BlurView } from "expo-blur";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { tourSteps } from "@/lib/tour-steps";
+import { tourSteps, type TourStepData } from "@/lib/tour-steps";
 import { colors, radius, shadows, spacing } from "@/lib/design-tokens";
 
-// ─── Tour card design tokens ───────────────────────────────────────────────────
-const CARD_BG      = colors.backgroundWhite;
-const CARD_BORDER  = colors.orangeBorder;
-const CARD_ACCENT  = colors.primaryOrange;
-const CARD_TITLE   = colors.primaryText;
-const CARD_BODY    = colors.secondaryText;
-const CARD_MUTED   = colors.secondaryText;
-
 // ─── Layout constants ─────────────────────────────────────────────────────────
-const CARD_MARGIN    = spacing.lg;         // 24px left/right
-const NAV_CLEARANCE  = 106;               // tab bar 70 + gap ~16 + buffer 20
-const CUTOUT_PAD     = 8;
+const CARD_MARGIN   = 20;
+const NAV_CLEARANCE = 110;
+const CUTOUT_PAD    = 10;
+const CARD_MIN_H    = 260;
 
 type Props = {
   step: number;
@@ -35,285 +43,384 @@ type Props = {
   onFinish: () => void;
 };
 
-// ─── Component ────────────────────────────────────────────────────────────────
 export function AppTourOverlay({ step, targetLayout, onNext, onSkip, onFinish }: Props) {
   const fadeAnim  = useRef(new Animated.Value(0)).current;
-  const scaleAnim = useRef(new Animated.Value(0.95)).current;
+  const scaleAnim = useRef(new Animated.Value(0.92)).current;
   const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
 
   useEffect(() => {
     fadeAnim.setValue(0);
-    scaleAnim.setValue(0.95);
+    scaleAnim.setValue(0.92);
     Animated.parallel([
-      Animated.timing(fadeAnim,  { toValue: 1, duration: 260, useNativeDriver: true }),
-      Animated.spring(scaleAnim, { toValue: 1, useNativeDriver: true, damping: 20, stiffness: 240 }),
+      Animated.timing(fadeAnim, { toValue: 1, duration: 320, useNativeDriver: true }),
+      Animated.spring(scaleAnim, { toValue: 1, useNativeDriver: true, damping: 18, stiffness: 200 }),
     ]).start();
   }, [step, fadeAnim, scaleAnim]);
 
-  // ── Guards ─────────────────────────────────────────────────────────────────
+  // ── Guards ──────────────────────────────────────────────────────────────────
   const isAskPhase  = step === -1;
-  const currentStep = tourSteps[step];
+  const currentStep = tourSteps[step] as TourStepData | undefined;
   if (!isAskPhase && !currentStep) return null;
 
-  const isLastStep  = step === tourSteps.length - 1;
-  const hasTarget   = !!targetLayout && !isAskPhase;
+  const isLastStep = step === tourSteps.length - 1;
+  const hasTarget  = !!targetLayout && !isAskPhase;
 
-  // ── Spotlight geometry (screen coordinates) ─────────────────────────────────
-  // Removing safeT clamping to guarantee exact pixel alignment with measureInWindow
+  // ── Spotlight geometry ──────────────────────────────────────────────────────
   const cx = hasTarget ? targetLayout!.x - CUTOUT_PAD : 0;
   const cy = hasTarget ? targetLayout!.y - CUTOUT_PAD : 0;
   const cw = hasTarget ? targetLayout!.width  + CUTOUT_PAD * 2 : 0;
   const ch = hasTarget ? targetLayout!.height + CUTOUT_PAD * 2 : 0;
 
-  // ── Card height — auto via minHeight so longer navbar copy fits ─────────────
-  const CARD_MIN_H = 196;
-
-  // ── Collision-aware anchor side ─────────────────────────────────────────────
+  // ── Card positioning ───────────────────────────────────────────────────────
   const cardTopWhenBottom = height - insets.bottom - NAV_CLEARANCE - CARD_MIN_H;
   const cardTopY          = insets.top + spacing.xl;
   const cardBottomWhenTop = cardTopY + CARD_MIN_H;
+  const cardAnchorTop     = hasTarget && (cy + ch + spacing.xl) > cardTopWhenBottom;
 
-  const cardAnchorTop = hasTarget && (cy + ch + spacing.xl) > cardTopWhenBottom;
-
-  // ── Arrow — X centre clamped to card interior ───────────────────────────────
+  // ── Arrow geometry ─────────────────────────────────────────────────────────
   const spotlightCentreX = cx + cw / 2;
-  const arrowX = Math.max(
-    CARD_MARGIN + 20,
-    Math.min(width - CARD_MARGIN - 20, spotlightCentreX),
-  );
+  const arrowX = Math.max(CARD_MARGIN + 20, Math.min(width - CARD_MARGIN - 20, spotlightCentreX));
+  const arrowFromY = cardAnchorTop ? cardBottomWhenTop + 4 : cardTopWhenBottom - 4;
+  const arrowToY   = cardAnchorTop ? cy - 8 : cy + ch + 8;
+  const arrowH     = Math.max(8, Math.abs(arrowToY - arrowFromY));
+  const arrowTop   = Math.min(arrowFromY, arrowToY);
+  const showArrow  = hasTarget && arrowH > 10;
 
-  // ── Arrow segment vertical bounds ───────────────────────────────────────────
-  const arrowFromY = cardAnchorTop
-    ? cardBottomWhenTop + 4
-    : cardTopWhenBottom - 4;
-  const arrowToY   = cardAnchorTop
-    ? cy - 8
-    : cy + ch + 8;
-  const arrowLineHeight = Math.max(8, Math.abs(arrowToY - arrowFromY));
-  const arrowLineTop    = Math.min(arrowFromY, arrowToY);
-
-  const showArrow = hasTarget && arrowLineHeight > 10;
+  // ── Per-step theme ─────────────────────────────────────────────────────────
+  const theme = currentStep?.theme ?? {
+    accent: colors.primaryOrange,
+    softBg: colors.softSurfaceTint,
+    iconTint: colors.primaryOrange,
+  };
 
   return (
-    <Modal
-      transparent
-      visible
-      animationType="none"
-      statusBarTranslucent
-      onRequestClose={onSkip}
-    >
+    <Modal transparent visible animationType="none" statusBarTranslucent onRequestClose={onSkip}>
       <Animated.View style={[styles.root, { opacity: fadeAnim }]}>
 
-        {/* ── Blurred backdrop ─────────── */}
+        {/* ── Backdrop ─────────────────────────────────────────────────── */}
         {isAskPhase || !hasTarget ? (
-          <BlurView intensity={24} tint="light" style={[StyleSheet.absoluteFill, styles.overlayPanel]} />
+          <BlurView intensity={28} tint="dark" style={[StyleSheet.absoluteFill, styles.overlayTint]} />
         ) : (
           <>
-            <BlurView intensity={24} tint="light"
-              style={[styles.overlayPanel, { position: "absolute", top: 0, left: 0, right: 0, height: Math.max(0, cy) }]} />
-            <BlurView intensity={24} tint="light"
-              style={[styles.overlayPanel, { position: "absolute", top: cy + ch, left: 0, right: 0, bottom: 0 }]} />
-            <BlurView intensity={24} tint="light"
-              style={[styles.overlayPanel, { position: "absolute", top: cy, left: 0, width: Math.max(0, cx), height: ch }]} />
-            <BlurView intensity={24} tint="light"
-              style={[styles.overlayPanel, { position: "absolute", top: cy, left: cx + cw, right: 0, height: ch }]} />
+            <BlurView intensity={28} tint="dark"
+              style={[styles.overlayTint, { position: "absolute", top: 0, left: 0, right: 0, height: Math.max(0, cy) }]} />
+            <BlurView intensity={28} tint="dark"
+              style={[styles.overlayTint, { position: "absolute", top: cy + ch, left: 0, right: 0, bottom: 0 }]} />
+            <BlurView intensity={28} tint="dark"
+              style={[styles.overlayTint, { position: "absolute", top: cy, left: 0, width: Math.max(0, cx), height: ch }]} />
+            <BlurView intensity={28} tint="dark"
+              style={[styles.overlayTint, { position: "absolute", top: cy, left: cx + cw, right: 0, height: ch }]} />
           </>
         )}
 
-        {/* ── Spotlight ring ────────────────── */}
+        {/* ── Spotlight glow ring ──────────────────────────────────────── */}
         {hasTarget && (
           <View
             pointerEvents="none"
-            style={[styles.spotlightRing, { top: cy, left: cx, width: cw, height: ch }]}
+            style={[
+              styles.spotlightRing,
+              {
+                top: cy, left: cx, width: cw, height: ch,
+                borderColor: theme.accent,
+                shadowColor: theme.accent,
+              },
+            ]}
           />
         )}
 
-        {/* ── Connecting arrow ──────────────── */}
+        {/* ── Connecting line ──────────────────────────────────────────── */}
         {showArrow && (
           <View
             pointerEvents="none"
-            style={[styles.arrowLine, { left: arrowX, top: arrowLineTop, height: arrowLineHeight }]}
+            style={[styles.arrowLine, { left: arrowX, top: arrowTop, height: arrowH, backgroundColor: theme.accent }]}
           >
-            {cardAnchorTop ? (
-              <View style={[styles.arrowHead, styles.arrowDown]} />
-            ) : (
-              <View style={[styles.arrowHead, styles.arrowUp]} />
-            )}
+            {cardAnchorTop
+              ? <View style={[styles.arrowHead, styles.arrowDown, { borderTopColor: theme.accent }]} />
+              : <View style={[styles.arrowHead, styles.arrowUp, { borderBottomColor: theme.accent }]} />
+            }
           </View>
         )}
 
-        {/* ── Tour card ────────────────────────────────────────────────── */}
+        {/* ── Tour Card ────────────────────────────────────────────────── */}
         <Animated.View
           style={[
             styles.card,
-            cardAnchorTop
-              ? { top: cardTopY }
-              : { bottom: insets.bottom + NAV_CLEARANCE },
+            cardAnchorTop ? { top: cardTopY } : { bottom: insets.bottom + NAV_CLEARANCE },
             { transform: [{ scale: scaleAnim }] },
           ]}
         >
-          {isAskPhase ? (
-            <>
-              <Text style={styles.title}>Your quick sanctuary tour</Text>
-              <Text style={styles.body}>
-                See where Bloop, settings, daily insights, and your private vault live after the latest navigation update.
-              </Text>
-              <View style={styles.actions}>
-                <TouchableOpacity activeOpacity={0.7} onPress={onSkip}
-                  style={styles.ghostBtn} accessibilityRole="button">
-                  <Text style={styles.ghostText}>Skip</Text>
-                </TouchableOpacity>
-                <TouchableOpacity activeOpacity={0.85} onPress={onNext}
-                  style={styles.primaryBtn} accessibilityRole="button">
-                  <Text style={styles.primaryText}>Begin tour</Text>
-                </TouchableOpacity>
-              </View>
-            </>
-          ) : (
-            <>
-              <View style={styles.titleRow}>
-                <View style={styles.stepPill}>
-                  <Text style={styles.stepPillText}>{step + 1} / {tourSteps.length}</Text>
-                </View>
-                <Text style={styles.title} numberOfLines={2}>{currentStep.title}</Text>
-              </View>
-
-              <Text style={styles.body} numberOfLines={5}>{currentStep.body}</Text>
-
-              <View style={styles.actions}>
-                <TouchableOpacity activeOpacity={0.7} onPress={onSkip}
-                  style={styles.ghostBtn} accessibilityRole="button">
-                  <Text style={[styles.ghostText, { textDecorationLine: "underline" }]}>Skip</Text>
-                </TouchableOpacity>
-                <View style={styles.dots}>
-                  {tourSteps.map((_, i) => (
-                    <View key={i} style={[styles.dot, i === step && styles.dotActive]} />
-                  ))}
-                </View>
-                <TouchableOpacity activeOpacity={0.85}
-                  onPress={isLastStep ? onFinish : onNext}
-                  style={styles.primaryBtn} accessibilityRole="button">
-                  <Text style={styles.primaryText}>{currentStep.buttonText}</Text>
-                </TouchableOpacity>
-              </View>
-            </>
+          {isAskPhase ? <AskPhaseContent onSkip={onSkip} onNext={onNext} /> : (
+            <StepContent
+              step={step}
+              data={currentStep!}
+              isLastStep={isLastStep}
+              onSkip={onSkip}
+              onNext={isLastStep ? onFinish : onNext}
+            />
           )}
         </Animated.View>
-
       </Animated.View>
     </Modal>
   );
 }
 
-// ─── Styles ───────────────────────────────────────────────────────────────────
+// ── Ask Phase (step -1) ───────────────────────────────────────────────────────
+function AskPhaseContent({ onSkip, onNext }: { onSkip: () => void; onNext: () => void }) {
+  return (
+    <>
+      {/* Icon badge */}
+      <View style={[styles.iconBadge, { backgroundColor: colors.softSurfaceTint }]}>
+        <Text style={{ fontSize: 32 }}>🌸</Text>
+      </View>
+
+      <Text style={styles.askTitle}>Welcome to your sanctuary</Text>
+      <Text style={styles.askBody}>
+        Take a quick 30-second tour to discover where everything lives — Bloop, your cycle dashboard,
+        insights, vault, and privacy controls.
+      </Text>
+
+      <View style={styles.askActions}>
+        <Pressable
+          accessibilityRole="button"
+          onPress={onSkip}
+          style={styles.ghostBtn}
+        >
+          <Text style={styles.ghostText}>Skip tour</Text>
+        </Pressable>
+        <Pressable accessibilityRole="button" onPress={onNext}>
+          <LinearGradient
+            colors={["#FB923C", "#F97316"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.gradientBtn}
+          >
+            <Text style={styles.gradientBtnText}>Begin tour ✨</Text>
+          </LinearGradient>
+        </Pressable>
+      </View>
+    </>
+  );
+}
+
+// ── Step Content ──────────────────────────────────────────────────────────────
+function StepContent({
+  step,
+  data,
+  isLastStep,
+  onSkip,
+  onNext,
+}: {
+  step: number;
+  data: TourStepData;
+  isLastStep: boolean;
+  onSkip: () => void;
+  onNext: () => void;
+}) {
+  const Icon = data.icon;
+  const { accent, softBg, iconTint } = data.theme;
+  const progress = (step + 1) / tourSteps.length;
+
+  return (
+    <>
+      {/* ── Top row: icon badge + kicker + step indicator ──── */}
+      <View style={styles.stepHeader}>
+        <View style={[styles.iconBadge, { backgroundColor: softBg }]}>
+          <Icon size={26} color={iconTint} strokeWidth={2.2} />
+        </View>
+        <View style={styles.headerMeta}>
+          <Text style={[styles.kicker, { color: accent }]}>{data.kicker}</Text>
+          <View style={[styles.stepPill, { backgroundColor: accent }]}>
+            <Text style={styles.stepPillText}>{step + 1}/{tourSteps.length}</Text>
+          </View>
+        </View>
+      </View>
+
+      {/* ── Title + body ──────────────────────────────────── */}
+      <Text style={styles.title} numberOfLines={2}>{data.title}</Text>
+      <Text style={styles.body} numberOfLines={4}>{data.body}</Text>
+
+      {/* ── Progress bar ──────────────────────────────────── */}
+      <View style={styles.progressTrack}>
+        <View style={[styles.progressFill, { width: `${progress * 100}%`, backgroundColor: accent }]} />
+      </View>
+
+      {/* ── Actions ───────────────────────────────────────── */}
+      <View style={styles.actions}>
+        <Pressable accessibilityRole="button" onPress={onSkip} style={styles.ghostBtn}>
+          <Text style={[styles.ghostText, { textDecorationLine: "underline" }]}>Skip</Text>
+        </Pressable>
+
+        {/* Step dots */}
+        <View style={styles.dots}>
+          {tourSteps.map((_, i) => (
+            <View
+              key={i}
+              style={[
+                styles.dot,
+                i === step && [styles.dotActive, { backgroundColor: accent }],
+                i < step && { backgroundColor: accent, opacity: 0.35 },
+              ]}
+            />
+          ))}
+        </View>
+
+        <Pressable accessibilityRole="button" onPress={onNext}>
+          <LinearGradient
+            colors={[accent, accent]}
+            style={[styles.nextBtn, isLastStep && styles.finishBtn]}
+          >
+            <Text style={styles.nextBtnText}>{data.buttonText}</Text>
+          </LinearGradient>
+        </Pressable>
+      </View>
+    </>
+  );
+}
+
+// ── Styles ─────────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
   root: {
     ...StyleSheet.absoluteFillObject,
     zIndex: 9999,
   },
-  overlayPanel: {
-    backgroundColor: "rgba(45, 42, 38, 0.36)",
+  overlayTint: {
+    backgroundColor: "rgba(25, 22, 18, 0.52)",
   },
 
+  // ── Spotlight
   spotlightRing: {
     position: "absolute",
-    borderRadius: 18,
-    borderWidth: 3,
-    borderColor: CARD_ACCENT,
-    shadowColor: CARD_ACCENT,
+    borderRadius: 20,
+    borderWidth: 2.5,
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.3,
-    shadowRadius: 18,
-    elevation: 8,
+    shadowOpacity: 0.45,
+    shadowRadius: 24,
+    elevation: 10,
   },
 
-  // Thicker 3px arrow line
+  // ── Arrow
   arrowLine: {
     position: "absolute",
-    width: 3,
-    backgroundColor: CARD_ACCENT,
-    opacity: 0.95,
-    borderRadius: 1.5,
+    width: 2.5,
+    opacity: 0.9,
+    borderRadius: 2,
   },
-
-  // Larger Arrowhead
   arrowHead: {
     position: "absolute",
     width: 0,
     height: 0,
-    left: -5.5,
-    borderLeftWidth: 7,
-    borderRightWidth: 7,
+    left: -5,
+    borderLeftWidth: 6,
+    borderRightWidth: 6,
     borderLeftColor: "transparent",
     borderRightColor: "transparent",
   },
   arrowDown: {
     bottom: -2,
-    borderTopWidth: 10,
-    borderTopColor: CARD_ACCENT,
+    borderTopWidth: 9,
   },
   arrowUp: {
     top: -2,
-    borderBottomWidth: 10,
-    borderBottomColor: CARD_ACCENT,
+    borderBottomWidth: 9,
   },
 
+  // ── Card
   card: {
     position: "absolute",
     left: CARD_MARGIN,
     right: CARD_MARGIN,
-    minHeight: 196,
-    backgroundColor: CARD_BG,
-    borderRadius: 24,
-    borderWidth: 1.5,
-    borderColor: CARD_BORDER,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.lg,
-    flexDirection: "column",
-    justifyContent: "space-between",
-    gap: spacing.sm,
-    ...shadows.lg,
+    minHeight: CARD_MIN_H,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 28,
+    borderWidth: 1,
+    borderColor: "rgba(241, 230, 221, 0.8)",
+    paddingHorizontal: 22,
+    paddingTop: 22,
+    paddingBottom: 18,
+    gap: 10,
+    // Premium shadow
+    shadowColor: "rgba(0,0,0,0.2)",
+    shadowOpacity: 0.16,
+    shadowRadius: 32,
+    shadowOffset: { width: 0, height: 16 },
+    elevation: 12,
   },
 
-  titleRow: {
+  // ── Icon badge
+  iconBadge: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  // ── Step header
+  stepHeader: {
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing.sm,
+    gap: 14,
+  },
+  headerMeta: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  kicker: {
+    fontFamily: "Poppins_600SemiBold",
+    fontSize: 12,
+    lineHeight: 16,
+    letterSpacing: 0.8,
+    textTransform: "uppercase",
   },
   stepPill: {
-    backgroundColor: CARD_ACCENT,
     borderRadius: radius.full,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    flexShrink: 0,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
   },
   stepPillText: {
-    color: colors.whiteText,
+    color: "#FFFFFF",
     fontFamily: "Poppins_600SemiBold",
     fontSize: 11,
     lineHeight: 16,
   },
+
+  // ── Typography
   title: {
-    color: CARD_TITLE,
-    fontFamily: "Poppins_600SemiBold",
-    fontSize: 16,
-    lineHeight: 22,
-    flex: 1,
+    color: colors.primaryText,
+    fontFamily: "Poppins_700Bold",
+    fontSize: 20,
+    lineHeight: 28,
+    letterSpacing: -0.2,
   },
   body: {
-    color: CARD_BODY,
+    color: colors.secondaryText,
     fontFamily: "Poppins_400Regular",
     fontSize: 14,
-    lineHeight: 21,
+    lineHeight: 22,
   },
 
-  // Action row
+  // ── Progress bar
+  progressTrack: {
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: colors.divider,
+    overflow: "hidden",
+    marginTop: 4,
+  },
+  progressFill: {
+    height: "100%",
+    borderRadius: 2,
+  },
+
+  // ── Action row
   actions: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    marginTop: 4,
   },
   dots: {
     flexDirection: "row",
@@ -324,38 +431,83 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: CARD_BORDER,
+    backgroundColor: colors.divider,
   },
   dotActive: {
-    width: 18,
+    width: 20,
     height: 6,
     borderRadius: 3,
-    backgroundColor: CARD_ACCENT,
   },
   ghostBtn: {
-    minHeight: 44,
+    minHeight: 48,
     paddingHorizontal: spacing.xs,
     justifyContent: "center",
   },
   ghostText: {
-    color: CARD_MUTED,
+    color: colors.mutedText,
     fontFamily: "Poppins_500Medium",
     fontSize: 13,
     lineHeight: 18,
   },
-  primaryBtn: {
-    backgroundColor: CARD_ACCENT,
-    borderRadius: 8,
+  nextBtn: {
     minHeight: 44,
+    borderRadius: 12,
     paddingVertical: 10,
-    paddingHorizontal: spacing.md,
+    paddingHorizontal: 18,
     justifyContent: "center",
     alignItems: "center",
   },
-  primaryText: {
-    color: colors.whiteText,
+  finishBtn: {
+    paddingHorizontal: 22,
+  },
+  nextBtnText: {
+    color: "#FFFFFF",
     fontFamily: "Poppins_600SemiBold",
     fontSize: 14,
     lineHeight: 20,
+  },
+
+  // ── Ask phase
+  askTitle: {
+    color: colors.primaryText,
+    fontFamily: "Poppins_700Bold",
+    fontSize: 22,
+    lineHeight: 30,
+    letterSpacing: -0.2,
+    textAlign: "center",
+    marginTop: 4,
+  },
+  askBody: {
+    color: colors.secondaryText,
+    fontFamily: "Poppins_400Regular",
+    fontSize: 14,
+    lineHeight: 22,
+    textAlign: "center",
+    paddingHorizontal: 8,
+  },
+  askActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: 8,
+  },
+  gradientBtn: {
+    minHeight: 48,
+    borderRadius: 14,
+    paddingVertical: 12,
+    paddingHorizontal: 22,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: colors.primaryOrange,
+    shadowOpacity: 0.28,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 6,
+  },
+  gradientBtnText: {
+    color: "#FFFFFF",
+    fontFamily: "Poppins_600SemiBold",
+    fontSize: 15,
+    lineHeight: 22,
   },
 });

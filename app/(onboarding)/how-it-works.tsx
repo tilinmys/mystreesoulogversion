@@ -193,11 +193,11 @@ export default function HowItWorksScreen() {
         style={[styles.footer, { paddingBottom: insets.bottom + 16 }]}
       >
         <View className="px-8">
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="I Understand, Let's Begin"
-            onPress={() => router.push("/(onboarding)/goals")}
-          >
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="I Understand, Let's Begin"
+            onPress={() => router.push("/(onboarding)/user-setup")}
+            >
             <LinearGradient
               colors={["#FF5439", "#FF724E"]}
               start={{ x: 0, y: 0.5 }}

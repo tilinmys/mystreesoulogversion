@@ -1,8 +1,8 @@
 import { Camera, Check, User, X } from "lucide-react-native";
 import { useRouter } from "expo-router";
 import { useState } from "react";
+import { sanitizeInput, sanitizeName, sanitizePhone, sanitizeDob } from "@/lib/sanitize";
 import {
-  Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -13,6 +13,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { Image } from "expo-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { colors, radius, shadows, spacing } from "@/lib/design-tokens";
@@ -31,7 +32,12 @@ export default function EditProfileScreen() {
   const [isSaved, setIsSaved] = useState(false);
 
   const handleSave = () => {
-    updateProfile({ userName: name, dateOfBirth: dob, phone, healthGoalSummary: summary });
+    updateProfile({
+      userName: sanitizeName(name),
+      dateOfBirth: sanitizeDob(dob),
+      phone: sanitizePhone(phone),
+      healthGoalSummary: sanitizeInput(summary, 800),
+    });
     setIsSaved(true);
     setTimeout(() => {
       if (router.canGoBack()) {
@@ -95,7 +101,7 @@ export default function EditProfileScreen() {
         <View style={styles.avatarSection}>
           <View style={styles.avatarRing}>
             {store.avatarUri ? (
-              <Image source={{ uri: store.avatarUri }} style={styles.avatarImage} />
+              <Image source={{ uri: store.avatarUri }} contentFit="cover" transition={300} style={styles.avatarImage} />
             ) : (
               <View style={styles.avatarPlaceholder}>
                 <User size={36} color={colors.primaryOrange} strokeWidth={1.8} />
@@ -121,6 +127,7 @@ export default function EditProfileScreen() {
               onChange={setName}
               placeholder="Your name"
               autoCapitalize="words"
+              maxLength={60}
             />
             <Divider />
             <FieldRow
@@ -129,6 +136,7 @@ export default function EditProfileScreen() {
               onChange={setDob}
               placeholder="DD / MM / YYYY"
               keyboardType="numbers-and-punctuation"
+              maxLength={15}
             />
             <Divider />
             <FieldRow
@@ -137,6 +145,7 @@ export default function EditProfileScreen() {
               onChange={setPhone}
               placeholder="+91 00000 00000"
               keyboardType="phone-pad"
+              maxLength={20}
             />
           </View>
         </View>
@@ -154,6 +163,7 @@ export default function EditProfileScreen() {
                 placeholderTextColor={colors.mutedText}
                 multiline
                 numberOfLines={3}
+                maxLength={800}
                 textAlignVertical="top"
               />
             </View>
@@ -193,7 +203,7 @@ function CompletionBar({
 }
 
 function FieldRow({
-  label, value, onChange, placeholder, autoCapitalize, keyboardType,
+  label, value, onChange, placeholder, autoCapitalize, keyboardType, maxLength,
 }: {
   label: string;
   value: string;
@@ -201,6 +211,7 @@ function FieldRow({
   placeholder?: string;
   autoCapitalize?: "none" | "sentences" | "words" | "characters";
   keyboardType?: any;
+  maxLength?: number;
 }) {
   return (
     <View style={styles.fieldRow}>
@@ -213,6 +224,7 @@ function FieldRow({
         placeholderTextColor={colors.mutedText}
         autoCapitalize={autoCapitalize ?? "none"}
         keyboardType={keyboardType ?? "default"}
+        maxLength={maxLength}
       />
     </View>
   );

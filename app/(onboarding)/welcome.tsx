@@ -102,19 +102,19 @@ export default function WelcomeScreen() {
 
           <View style={[styles.footer, { width: contentWidth }]}>
             <PrimaryButton
-              label="GET STARTED"
-              accessibilityLabel="Start the MyStree Soul demo"
-              onPress={() => router.push("/(onboarding)/consent")}
+              label="SIGN UP"
+              accessibilityLabel="Sign up for MyStree Soul"
+              onPress={() => router.push({ pathname: "/(auth)/login", params: { mode: "signup" } })}
               style={styles.primaryButton}
               textStyle={styles.primaryButtonText}
             />
 
             <TouchableOpacity
               activeOpacity={0.7}
-              onPress={() => router.push("/(onboarding)/login")}
+              onPress={() => router.push({ pathname: "/(auth)/login", params: { mode: "login" } })}
               style={styles.loginLink}
             >
-              <Text style={styles.loginText}>I already have an account</Text>
+              <Text style={styles.loginText}>LOG IN</Text>
             </TouchableOpacity>
 
             <View style={styles.privacy}>

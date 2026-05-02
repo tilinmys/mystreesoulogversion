@@ -8,7 +8,8 @@ import {
   Smile,
   Zap,
 } from "lucide-react-native";
-import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Image } from "expo-image";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, {
   Circle,
@@ -19,6 +20,8 @@ import Svg, {
   Stop,
   Text as SvgText,
 } from "react-native-svg";
+
+import { useAppStore } from "@/store/app-store";
 
 const colors = {
   warmWhite: "#FFF8F5",
@@ -47,15 +50,19 @@ const quickLogs = [
 
 const bloopImage = require("@/images/webp/blooppink1.webp");
 
-function CycleRing() {
+function CycleRing({ cycleLength }: { cycleLength: number }) {
   const center = 150;
   const radius = 106;
   const strokeWidth = 44;
   const circumference = 2 * Math.PI * radius;
-  const segment = circumference * 0.225;
+  const safeCycleLength = Math.max(21, Number.isFinite(cycleLength) ? Math.round(cycleLength) : 28);
   const gap = circumference * 0.025;
-  const dash = `${segment} ${circumference - segment}`;
-  const offsets = [0, -(segment + gap), -(segment + gap) * 2, -(segment + gap) * 3];
+  const drawableCircumference = Math.max(1, circumference - gap * 4);
+  const phaseLengths = [5, 9, 4, Math.max(3, safeCycleLength - 18)];
+  const arcs = phaseLengths.map((days) => Math.max(1, drawableCircumference * (days / safeCycleLength)));
+  const offsets = arcs.map((_, index) =>
+    -arcs.slice(0, index).reduce((total, arcLength) => total + arcLength + gap, 0),
+  );
 
   return (
     <View className="items-center justify-center mt-8 mb-6">
@@ -86,23 +93,27 @@ function CycleRing() {
           ["follicular", offsets[1]],
           ["ovulation", offsets[2]],
           ["luteal", offsets[3]],
-        ].map(([id, offset]) => (
-          <Circle
-            key={id}
-            cx={center}
-            cy={center}
-            r={radius}
-            stroke={`url(#${id})`}
-            strokeWidth={strokeWidth}
-            strokeDasharray={dash}
-            strokeDashoffset={Number(offset)}
-            strokeLinecap="round"
-            fill="none"
-            rotation="-128"
-            originX={center}
-            originY={center}
-          />
-        ))}
+        ].map(([id, offset], index) => {
+          const arcLength = arcs[index];
+
+          return (
+            <Circle
+              key={id}
+              cx={center}
+              cy={center}
+              r={radius}
+              stroke={`url(#${id})`}
+              strokeWidth={strokeWidth}
+              strokeDasharray={`${arcLength} ${circumference - arcLength}`}
+              strokeDashoffset={Number(offset)}
+              strokeLinecap="round"
+              fill="none"
+              rotation="-128"
+              originX={center}
+              originY={center}
+            />
+          );
+        })}
 
         <Circle cx={center} cy={center} r={73} fill={colors.white} opacity={0.96} />
         <Circle cx={center} cy={center} r={85} stroke="#FFFFFF" strokeWidth={3} fill="none" opacity={0.9} />
@@ -252,7 +263,7 @@ function TodayInsightCard() {
           <View style={styles.bloopSparkle}>
             <InsightSparkle />
           </View>
-          <Image source={bloopImage} resizeMode="contain" style={styles.bloopImage} />
+          <Image source={bloopImage} contentFit="contain" transition={300} style={styles.bloopImage} />
           <Text style={styles.bloopName}>Bloop AI</Text>
           <Text style={styles.bloopDescription}>Your personal women's health companion</Text>
         </View>
@@ -281,6 +292,7 @@ function FloralWatermark() {
 export default function CycleScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const cycleLength = useAppStore((state) => state.cycleLength);
 
   return (
     <SafeAreaView className="flex-1" style={styles.screen} edges={["top", "left", "right"]}>
@@ -307,7 +319,7 @@ export default function CycleScreen() {
         </View>
 
         <View className="px-8">
-          <CycleRing />
+          <CycleRing cycleLength={cycleLength} />
         </View>
 
         <View className="px-8">

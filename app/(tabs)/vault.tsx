@@ -10,16 +10,13 @@ import {
   Plus,
   Share2,
 } from "lucide-react-native";
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, FlatList, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useMemo, useState } from "react";
 import Svg, {
   Circle,
-  Defs,
   G,
-  LinearGradient as SvgLinearGradient,
   Path,
-  Stop,
 } from "react-native-svg";
 
 import { type HealthRecord, type RecordType, useAppStore } from "@/store/app-store";
@@ -88,31 +85,33 @@ function FaceLockMark() {
   );
 }
 
-function EmptyVaultArt() {
+function EmptyVaultIllustration() {
   return (
     <Svg width={144} height={120} viewBox="0 0 168 144">
-      <Defs>
-        <SvgLinearGradient id="emptyFolder" x1="0" y1="0" x2="1" y2="1">
-          <Stop offset="0" stopColor="#FF7D63" />
-          <Stop offset="1" stopColor="#FFE3DA" />
-        </SvgLinearGradient>
-      </Defs>
-      <Circle cx="84" cy="66" r="62" fill="#FFF4F0" />
-      <Path d="M44 78 C28 68 18 54 16 38" stroke="#F3BBB0" strokeWidth={3} fill="none" opacity={0.7} />
-      <Path d="M26 57 C15 55 8 49 6 40 C18 40 25 47 26 57Z" fill="#F3BBB0" opacity={0.62} />
-      <Path d="M36 72 C24 74 15 69 10 60 C23 58 32 62 36 72Z" fill="#F3BBB0" opacity={0.62} />
-      <Path d="M124 78 C140 68 150 54 152 38" stroke="#B9AAA7" strokeWidth={3} fill="none" opacity={0.32} />
-      <Path d="M142 57 C153 55 160 49 162 40 C150 40 143 47 142 57Z" fill="#B9AAA7" opacity={0.28} />
-      <Path d="M132 72 C144 74 153 69 158 60 C145 58 136 62 132 72Z" fill="#B9AAA7" opacity={0.28} />
-      <Path d="M49 52 H78 L86 60 H119 C126 60 130 64 130 71 V105 H38 V63 C38 57 43 52 49 52Z" fill="url(#emptyFolder)" />
-      <Path d="M39 69 H119 C125 69 129 73 129 79 V105 H39Z" fill="#FFE1D7" />
-      <Circle cx="84" cy="88" r="14" fill="#FF8A72" opacity={0.9} />
-      <Path d="M79 87 V83 C79 80 81 78 84 78 C87 78 89 80 89 83 V87" stroke={palette.white} strokeWidth={3} fill="none" strokeLinecap="round" />
-      <Path d="M84 88 V94" stroke={palette.white} strokeWidth={3} strokeLinecap="round" />
-      <Path d="M34 126 H136" stroke="#F1D9D2" strokeWidth={2} strokeLinecap="round" />
-      <Path d="M38 26 L40 30 L44 32 L40 34 L38 38 L36 34 L32 32 L36 30Z" fill="#FF9B86" opacity={0.7} />
-      <Path d="M127 18 L129 22 L133 24 L129 26 L127 30 L125 26 L121 24 L125 22Z" fill="#FF9B86" opacity={0.55} />
-      <Path d="M142 82 L144 86 L148 88 L144 90 L142 94 L140 90 L136 88 L140 86Z" fill="#FF9B86" opacity={0.55} />
+      <Circle cx="84" cy="70" r="56" fill="#FFF3EF" />
+      <Path
+        d="M48 54 H120 C126 54 130 58 130 64 V104 C130 110 126 114 120 114 H48 C42 114 38 110 38 104 V64 C38 58 42 54 48 54Z"
+        stroke={palette.coral}
+        strokeWidth={4}
+        fill="none"
+        opacity={0.72}
+        strokeLinejoin="round"
+      />
+      <Path
+        d="M58 54 V43 C58 30 69 20 84 20 C99 20 110 30 110 43 V54"
+        stroke={palette.coral}
+        strokeWidth={4}
+        fill="none"
+        opacity={0.54}
+        strokeLinecap="round"
+      />
+      <Circle cx="84" cy="84" r="15" stroke={palette.coral} strokeWidth={4} fill="none" opacity={0.7} />
+      <Path d="M84 99 V106" stroke={palette.coral} strokeWidth={4} strokeLinecap="round" opacity={0.7} />
+      <Path d="M54 70 H66" stroke={palette.coral} strokeWidth={3} strokeLinecap="round" opacity={0.44} />
+      <Path d="M102 70 H114" stroke={palette.coral} strokeWidth={3} strokeLinecap="round" opacity={0.44} />
+      <Path d="M30 120 H138" stroke="#F1D9D2" strokeWidth={2} strokeLinecap="round" />
+      <Path d="M31 34 L34 41 L41 44 L34 47 L31 54 L28 47 L21 44 L28 41Z" fill="#FF9B86" opacity={0.56} />
+      <Path d="M132 28 L134 33 L139 35 L134 37 L132 42 L130 37 L125 35 L130 33Z" fill="#FF9B86" opacity={0.48} />
     </Svg>
   );
 }
@@ -220,26 +219,36 @@ function VaultRecordCard({
   );
 }
 
-function EmptyState({ filter, onUpload }: { filter: VaultFilter; onUpload: () => void }) {
-  const isFiltered = filter !== "All";
+function EmptyVaultState({
+  filter,
+  hasAnyRecords,
+  onAdd,
+}: {
+  filter: VaultFilter;
+  hasAnyRecords: boolean;
+  onAdd: () => void;
+}) {
+  const isFiltered = hasAnyRecords && filter !== "All";
 
   return (
-    <View className="items-center mt-8">
-      <EmptyVaultArt />
+    <View className="flex-1 items-center justify-center px-6" style={styles.emptyState}>
+      <EmptyVaultIllustration />
       <Text style={styles.emptyTitle}>
-        {isFiltered ? `No ${filter.toLowerCase()} yet.` : "Your secure sanctuary is empty."}
+        {isFiltered ? `No ${filter.toLowerCase()} yet` : "Your Vault is Empty"}
       </Text>
       <Text style={styles.emptySubtitle}>
-        {isFiltered ? "Try another filter or upload a matching record." : "Upload your first record."}
+        {isFiltered
+          ? "Try another filter or add a matching record."
+          : "Your private sanctuary awaits. Log your first symptom or memory today."}
       </Text>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="Upload first record"
-        onPress={onUpload}
+        accessibilityLabel="Add vault entry"
+        onPress={onAdd}
         className="items-center justify-center"
         style={styles.emptyUploadButton}
       >
-        <Text style={styles.emptyUploadText}>Upload Record</Text>
+        <Text style={styles.emptyUploadText}>+ Add Entry</Text>
       </Pressable>
     </View>
   );
@@ -288,56 +297,65 @@ export default function VaultScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-white" edges={["top", "left", "right"]}>
-      <ScrollView
+      <FlatList
+        data={filteredRecords}
+        keyExtractor={(record) => record.id}
+        renderItem={({ item }) => (
+          <View style={styles.recordItem}>
+            <VaultRecordCard record={item} onOpen={openRecord} onMore={openMoreActions} />
+          </View>
+        )}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
-        contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 24 }]}
-      >
-        <View className="px-6">
-          <Header onLockPress={showSecurityDetails} />
-          <FilterPills activeFilter={activeFilter} onChange={setActiveFilter} />
-
-          <View className="mt-6">
-            {filteredRecords.length > 0 ? (
-              filteredRecords.map((record) => (
-                <VaultRecordCard
-                  key={record.id}
-                  record={record}
-                  onOpen={openRecord}
-                  onMore={openMoreActions}
-                />
-              ))
-            ) : (
-              <EmptyState filter={activeFilter} onUpload={openUpload} />
-            )}
+        contentContainerStyle={[styles.listContent, { paddingBottom: insets.bottom + 24 }]}
+        ListHeaderComponent={
+          <View style={styles.listHeader}>
+            <Header onLockPress={showSecurityDetails} />
+            <FilterPills activeFilter={activeFilter} onChange={setActiveFilter} />
+            {filteredRecords.length > 0 ? <View style={styles.recordsTopGap} /> : null}
           </View>
-
-          <View className="flex-row justify-end mt-4 mb-4">
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Upload new record"
-              onPress={openUpload}
-              style={styles.fabTouchTarget}
-            >
-              <LinearGradient
-                colors={[palette.coralDeep, palette.coral]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-              style={styles.fab}
-            >
-                <Plus size={36} color={palette.white} strokeWidth={1.8} />
-              </LinearGradient>
-            </Pressable>
-          </View>
-        </View>
-      </ScrollView>
+        }
+        ListEmptyComponent={
+          <EmptyVaultState filter={activeFilter} hasAnyRecords={records.length > 0} onAdd={openUpload} />
+        }
+        ListFooterComponent={
+          filteredRecords.length > 0 ? (
+            <View className="flex-row justify-end" style={styles.footerAddWrap}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Upload new record"
+                onPress={openUpload}
+                style={styles.fabTouchTarget}
+              >
+                <LinearGradient
+                  colors={[palette.coralDeep, palette.coral]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.fab}
+                >
+                  <Plus size={36} color={palette.white} strokeWidth={1.8} />
+                </LinearGradient>
+              </Pressable>
+            </View>
+          ) : null
+        }
+      />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  scrollContent: {
+  listContent: {
     flexGrow: 1,
+  },
+  listHeader: {
+    paddingHorizontal: 24,
+  },
+  recordsTopGap: {
+    height: 24,
+  },
+  recordItem: {
+    paddingHorizontal: 24,
   },
   faceGlow: {
     width: 112,
@@ -441,20 +459,21 @@ const styles = StyleSheet.create({
   emptyTitle: {
     color: palette.primaryText,
     fontFamily: "Poppins_600SemiBold",
-    fontSize: 16,
-    lineHeight: 24,
+    fontSize: 18,
+    lineHeight: 26,
     textAlign: "center",
     letterSpacing: 0,
-    marginTop: 8,
+    marginTop: 16,
   },
   emptySubtitle: {
     color: palette.secondaryText,
     fontFamily: "Poppins_400Regular",
     fontSize: 14,
-    lineHeight: 24,
+    lineHeight: 22,
     textAlign: "center",
     letterSpacing: 0,
     marginTop: 8,
+    maxWidth: 288,
   },
   emptyUploadButton: {
     minWidth: 144,
@@ -469,6 +488,14 @@ const styles = StyleSheet.create({
     fontFamily: "Poppins_600SemiBold",
     fontSize: 14,
     lineHeight: 20,
+  },
+  emptyState: {
+    minHeight: 376,
+  },
+  footerAddWrap: {
+    paddingHorizontal: 24,
+    marginTop: 16,
+    marginBottom: 16,
   },
   fabTouchTarget: {
     width: 80,

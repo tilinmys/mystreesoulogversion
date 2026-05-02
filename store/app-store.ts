@@ -52,6 +52,8 @@ type DemoState = {
   phone: string;
   healthGoalSummary: string;
   setHasHydrated: (value: boolean) => void;
+  beginAuthFlow: () => void;
+  resumeExistingSession: () => void;
   acceptConsent: () => void;
   setHasSeenBloopIntro: (value: boolean) => void;
   markFounderQuotesSeen: () => void;
@@ -67,6 +69,7 @@ type DemoState = {
   skipCycleSetup: (userName?: string) => void;
   setDailyMood: (mood: string) => void;
   setBloopVisible: (visible: boolean) => void;
+  sanitizeCycleValues: () => void;
   updateProfile: (fields: { userName?: string; avatarUri?: string; dateOfBirth?: string; phone?: string; healthGoalSummary?: string }) => void;
   unlockVault: () => void;
   addRecord: (record: Omit<HealthRecord, "id" | "date">) => void;
@@ -116,6 +119,23 @@ const initialRecords: HealthRecord[] = [
   },
 ];
 
+const MIN_CYCLE_LENGTH = 21;
+const MAX_CYCLE_LENGTH = 45;
+const DEFAULT_CYCLE_LENGTH = 28;
+const MIN_PERIOD_LENGTH = 3;
+const MAX_PERIOD_LENGTH = 10;
+const DEFAULT_PERIOD_LENGTH = 5;
+
+function sanitizeCycleLength(value: number) {
+  const safeValue = Number.isFinite(value) ? Math.round(value) : DEFAULT_CYCLE_LENGTH;
+  return Math.min(MAX_CYCLE_LENGTH, Math.max(MIN_CYCLE_LENGTH, safeValue));
+}
+
+function sanitizePeriodLength(value: number) {
+  const safeValue = Number.isFinite(value) ? Math.round(value) : DEFAULT_PERIOD_LENGTH;
+  return Math.min(MAX_PERIOD_LENGTH, Math.max(MIN_PERIOD_LENGTH, safeValue));
+}
+
 const initialState = {
   hasHydrated: false,
   userName: "Aarya",
@@ -152,6 +172,27 @@ export const useAppStore = create<DemoState>()(
     (set) => ({
       ...initialState,
       setHasHydrated: (hasHydrated) => set({ hasHydrated }),
+      beginAuthFlow: () =>
+        set({
+          consentAccepted: false,
+          hasCompletedOnboarding: false,
+          onboardingCompleted: false,
+          hasSeenBloopIntro: false,
+          hasSeenFounderQuotes: false,
+          hasSeenAppTour: false,
+          tourStep: 0,
+          isBloopVisible: true,
+        }),
+      resumeExistingSession: () =>
+        set({
+          consentAccepted: true,
+          hasCompletedOnboarding: true,
+          onboardingCompleted: true,
+          hasSeenBloopIntro: true,
+          hasSeenAppTour: true,
+          tourStep: 0,
+          isBloopVisible: true,
+        }),
       acceptConsent: () => set({ consentAccepted: true }),
       setHasSeenBloopIntro: (hasSeenBloopIntro) =>
         set((state) => ({
@@ -171,8 +212,8 @@ export const useAppStore = create<DemoState>()(
         set({
           userName: userName.trim() || "beautiful",
           lastPeriodDate,
-          cycleLength,
-          periodLength,
+          cycleLength: sanitizeCycleLength(cycleLength),
+          periodLength: sanitizePeriodLength(periodLength),
           cycleTrackingSkipped: false,
           wellnessMode: false,
           hasCompletedOnboarding: true,
@@ -189,6 +230,11 @@ export const useAppStore = create<DemoState>()(
         }),
       setDailyMood: (dailyMood) => set({ dailyMood }),
       setBloopVisible: (isBloopVisible) => set({ isBloopVisible }),
+      sanitizeCycleValues: () =>
+        set((state) => ({
+          cycleLength: sanitizeCycleLength(state.cycleLength),
+          periodLength: sanitizePeriodLength(state.periodLength),
+        })),
       updateProfile: (fields) => set((state) => ({
         userName: fields.userName?.trim() || state.userName,
         avatarUri: fields.avatarUri !== undefined ? fields.avatarUri : state.avatarUri,
@@ -235,6 +281,7 @@ export const useAppStore = create<DemoState>()(
       storage: createJSONStorage(() => AsyncStorage),
       version: 1,
       onRehydrateStorage: () => (state) => {
+        state?.sanitizeCycleValues();
         state?.setHasHydrated(true);
       },
       partialize: (state) => ({
@@ -259,6 +306,7 @@ export const useAppStore = create<DemoState>()(
         hasSeenFounderQuotes: state.hasSeenFounderQuotes,
         hasSeenAppTour: state.hasSeenAppTour,
         tourStep: state.tourStep,
+        isBloopVisible: state.isBloopVisible,
       }),
     },
   ),

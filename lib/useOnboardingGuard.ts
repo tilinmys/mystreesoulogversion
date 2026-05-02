@@ -13,10 +13,17 @@ export function useOnboardingGuard() {
   const consentAccepted = useAppStore((s) => s.consentAccepted);
   const selectedGoals = useAppStore((s) => s.selectedGoals);
   const hasCompletedOnboarding = useAppStore((s) => s.hasCompletedOnboarding);
+  const onboardingCompleted = useAppStore((s) => s.onboardingCompleted);
 
   useEffect(() => {
     if (!rootNavigationState?.key || !hasHydrated) return;
     if (segments[0] === "(onboarding)") return;
+
+    const completedOnboarding = hasCompletedOnboarding || onboardingCompleted;
+    if (completedOnboarding) return;
+
+    const missingDetails = !consentAccepted || selectedGoals.length === 0 || !hasCompletedOnboarding;
+    if (!missingDetails) return;
 
     let target:
       | "/(onboarding)/consent"
@@ -26,7 +33,7 @@ export function useOnboardingGuard() {
 
     if (!consentAccepted) {
       target = "/(onboarding)/consent";
-    } else if (selectedGoals.length === 0) {
+    } else if (!hasCompletedOnboarding && selectedGoals.length === 0) {
       target = "/(onboarding)/intro";
     } else if (!hasCompletedOnboarding) {
       target = "/(onboarding)/cycle-setup";
@@ -44,6 +51,7 @@ export function useOnboardingGuard() {
     consentAccepted,
     selectedGoals,
     hasCompletedOnboarding,
+    onboardingCompleted,
     segments,
     rootNavigationState?.key,
     router,

@@ -11,6 +11,7 @@ import { SafeScreen } from "@/components/layout/SafeScreen";
 import { colors, radius, spacing } from "@/lib/design-tokens";
 import { strings } from "@/lib/strings";
 import { useAppStore } from "@/store/app-store";
+import { sanitizeInput } from "@/lib/sanitize";
 
 // Moods considered conflicting — user can only pick one at a time from each group
 const CALM_MOODS  = ["Calm", "Energetic"];
@@ -52,7 +53,7 @@ export default function LogDayModal() {
   };
 
   const save = () => {
-    addLog({ mood, pain, fatigue, sleep, bp, weight, notes });
+    addLog({ mood, pain, fatigue, sleep, bp, weight, notes: sanitizeInput(notes, 500) });
     setSaved(true);
   };
 
@@ -116,10 +117,10 @@ export default function LogDayModal() {
         <AppCard style={styles.sectionCard}>
           <Text style={styles.sectionTitle}>{strings.modals.logDay.vitals}</Text>
           <View style={styles.inputRow}>
-            <DemoInput label="Sleep" value={sleep} onChangeText={setSleep} />
-            <DemoInput label="BP" value={bp} onChangeText={setBp} />
+            <DemoInput label="Sleep" value={sleep} onChangeText={setSleep} maxLength={20} />
+            <DemoInput label="BP" value={bp} onChangeText={setBp} maxLength={20} />
           </View>
-          <DemoInput label="Weight" value={weight} onChangeText={setWeight} />
+          <DemoInput label="Weight" value={weight} onChangeText={setWeight} maxLength={20} />
         </AppCard>
 
         <AppCard style={styles.sectionCard}>
@@ -130,6 +131,7 @@ export default function LogDayModal() {
             placeholder={strings.modals.logDay.notesPlaceholder}
             placeholderTextColor={colors.mutedText}
             multiline
+            maxLength={500}
             style={styles.notes}
           />
         </AppCard>
@@ -155,11 +157,11 @@ function Scale({ label, value, setValue }: { label: string; value: number; setVa
   );
 }
 
-function DemoInput({ label, value, onChangeText }: { label: string; value: string; onChangeText: (value: string) => void }) {
+function DemoInput({ label, value, onChangeText, maxLength }: { label: string; value: string; onChangeText: (value: string) => void; maxLength?: number }) {
   return (
     <View style={styles.demoInputWrap}>
       <Text style={styles.inputLabel}>{label}</Text>
-      <TextInput value={value} onChangeText={onChangeText} style={styles.input} />
+      <TextInput value={value} onChangeText={onChangeText} maxLength={maxLength} style={styles.input} />
     </View>
   );
 }
